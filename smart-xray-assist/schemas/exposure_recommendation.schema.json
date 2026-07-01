@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExposureRecommendation",
+  "type": "object",
+  "required": ["schema_version", "type", "device_id", "session_id", "timestamp_ms", "input", "recommendation", "guardrails"],
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "type": { "const": "exposure.recommendation" },
+    "device_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "timestamp_ms": { "type": "integer" },
+    "monotonic_ms": { "type": "integer" },
+    "input": {
+      "type": "object",
+      "required": ["estimated_thickness_mm", "body_region", "patient_mode"],
+      "properties": {
+        "estimated_thickness_mm": { "type": "number" },
+        "body_region": { "enum": ["chest_pa", "chest_lateral", "abdomen_ap", "pelvis_ap"] },
+        "patient_mode": { "enum": ["adult", "pediatric", "bariatric"] },
+        "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "properties": {
+        "kvp": { "type": ["number", "null"] },
+        "mas": { "type": ["number", "null"] },
+        "source": { "type": "string" },
+        "model_hash": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "operator_approval_required": { "const": true }
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "properties": {
+        "within_min_max": { "type": "boolean" },
+        "pediatric_limit_applied": { "type": "boolean" },
+        "bariatric_offset_applied": { "type": "boolean" },
+        "manual_review_required": { "type": "boolean" }
+      }
+    },
+    "display": {
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" },
+        "severity": { "enum": ["info", "warning", "error"] }
+      }
+    }
+  }
+}

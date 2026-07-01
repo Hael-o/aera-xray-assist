@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CameraFrameMeta",
+  "type": "object",
+  "required": ["schema_version", "type", "device_id", "session_id", "frame_id", "timestamp_ms", "camera", "stream", "shared_memory"],
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "type": { "const": "camera.frame_meta" },
+    "device_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "frame_id": { "type": "integer" },
+    "timestamp_ms": { "type": "integer" },
+    "monotonic_ms": { "type": "integer" },
+    "camera": {
+      "type": "object",
+      "properties": {
+        "vendor": { "type": "string" }, "model": { "type": "string" },
+        "serial": { "type": "string" }, "firmware": { "type": "string" },
+        "sdk": { "type": "string" }
+      }
+    },
+    "stream": {
+      "type": "object",
+      "properties": {
+        "depth_width": { "type": "integer" }, "depth_height": { "type": "integer" },
+        "depth_fps": { "type": "integer" }, "format": { "type": "string" },
+        "depth_scale_m": { "type": "number" }
+      }
+    },
+    "shared_memory": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }, "slot_index": { "type": "integer" },
+        "bytes": { "type": "integer" }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "dropped_frames": { "type": "integer" },
+        "usb_speed": { "type": "string" },
+        "temperature_c": { "type": ["number", "null"] },
+        "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    }
+  }
+}

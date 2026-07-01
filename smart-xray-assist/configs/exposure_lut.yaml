@@ -1,0 +1,20 @@
+metadata:
+  version: 1.3.0
+  approved_by: qa
+  signed: true
+
+chest_pa:
+  adult:
+    - { thickness_mm_min:   0, thickness_mm_max: 180, kvp:  70, mas:  8.0 }
+    - { thickness_mm_min: 181, thickness_mm_max: 240, kvp:  82, mas: 15.0 }
+    - { thickness_mm_min: 241, thickness_mm_max: 320, kvp:  90, mas: 22.0 }
+  pediatric:
+    - { thickness_mm_min:   0, thickness_mm_max: 120, kvp:  60, mas:  4.0, note: "pending clinical review" }
+  bariatric:
+    - { thickness_mm_min: 321, thickness_mm_max: 450, kvp: 100, mas: 40.0, note: "pending clinical review" }
+
+guardrails:
+  kvp_min: 60
+  kvp_max: 120
+  mas_min: 1.0
+  mas_max: 80.0

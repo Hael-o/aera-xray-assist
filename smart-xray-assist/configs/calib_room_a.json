@@ -1,0 +1,14 @@
+{
+  "profile_id": "calib_room_a_20260624",
+  "created_at": "2026-06-24T09:00:00+09:00",
+  "camera_serial": "mock-000000001",
+  "schema_version": "1.0.0",
+  "bed_origin_mm": 1112.7,
+  "extrinsic_matrix_4x4": [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],
+  "roi_templates": {
+    "chest_pa": {"x": 200, "y": 140, "width": 240, "height": 200}
+  },
+  "valid_pixel_ratio_baseline": 0.93,
+  "approved_by": "installation_engineer",
+  "signature": "PLACEHOLDER"
+}

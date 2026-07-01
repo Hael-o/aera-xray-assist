@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ErrorEvent",
+  "type": "object",
+  "required": ["schema_version", "type", "device_id", "module", "code", "severity", "message", "safe_state_entered"],
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "type": { "const": "system.error" },
+    "device_id": { "type": "string" },
+    "session_id": { "type": ["string", "null"] },
+    "timestamp_ms": { "type": "integer" },
+    "module": { "type": "string" },
+    "code": {
+      "enum": ["CAMERA_DISCONNECTED", "FRAME_DROP_EXCEEDED", "CALIBRATION_MISSING",
+               "CALIBRATION_DRIFT", "ROI_NOT_FOUND", "LOW_CONFIDENCE",
+               "AUDIO_DEVICE_MISSING", "DB_WRITE_FAILED", "MODEL_SIGNATURE_INVALID",
+               "CONFIG_SIGNATURE_INVALID"]
+    },
+    "severity": { "enum": ["info", "warning", "error", "critical"] },
+    "message": { "type": "string" },
+    "safe_state_entered": { "type": "boolean" },
+    "recommended_operator_action": { "type": ["string", "null"] }
+  }
+}

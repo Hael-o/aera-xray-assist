@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AERA PACS · Respiration-Gated Exposure Assist</title>
+<style>
+/* ===== Webflow design system — tokens.css :root (bound verbatim) ===== */
+:root{
+  --bg:#ffffff;--surface:#ffffff;--surface-warm:var(--surface);
+  --fg:#080808;--fg-2:#363636;--muted:#5a5a5a;--meta:#ababab;
+  --border:#d8d8d8;--border-soft:#ebebeb;
+  --accent:#146ef5;--accent-on:#ffffff;--accent-hover:#0055d4;--accent-active:color-mix(in oklab,var(--accent),black 14%);
+  --success:#00d722;--warn:#ffae13;--danger:#ee1d36;
+  --font-display:"WF Visual Sans Variable","Inter",Arial,system-ui,sans-serif;
+  --font-body:"WF Visual Sans Variable","Inter",Arial,system-ui,sans-serif;
+  --font-mono:"Inconsolata",ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace;
+  --text-xs:12px;--text-sm:14px;--text-base:16px;--text-lg:20px;--text-xl:24px;--text-2xl:32px;--text-3xl:56px;--text-4xl:80px;
+  --leading-body:1.6;--leading-tight:1.04;--tracking-display:-0.01em;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;--space-12:48px;
+  --radius-sm:4px;--radius-md:4px;--radius-lg:8px;--radius-pill:9999px;
+  --elev-flat:none;--elev-ring:0 0 0 1px var(--border);
+  --elev-raised:0px 84px 24px rgba(0,0,0,0),0px 54px 22px rgba(0,0,0,.01),0px 30px 18px rgba(0,0,0,.04),0px 13px 13px rgba(0,0,0,.08),0px 3px 7px rgba(0,0,0,.09);
+  --focus-ring:0 0 0 3px color-mix(in oklab,var(--accent),transparent 70%);
+  --motion-fast:150ms;--motion-base:200ms;--ease-standard:cubic-bezier(.2,0,0,1);--container-max:1200px;
+}
+:root{
+  --ready:var(--success);--ready-ink:color-mix(in oklab,var(--success),#063d12 62%);
+  --warn-ink:color-mix(in oklab,var(--warn),#4a2e00 55%);
+  --track-line:color-mix(in oklab,var(--accent),var(--muted) 50%);
+  --tint-accent:color-mix(in oklab,var(--accent),white 90%);
+  --tint-ready:color-mix(in oklab,var(--success),white 86%);
+  --tint-warn:color-mix(in oklab,var(--warn),white 84%);
+  --tint-danger:color-mix(in oklab,var(--danger),white 88%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--font-body);-webkit-font-smoothing:antialiased;letter-spacing:-.006em}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font:600 11px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+button{font-family:inherit}
+:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:var(--radius-sm)}
+
+.app{max-width:1340px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:14px}
+
+.topbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{width:40px;height:40px;flex:none}
+.brand h1{font-size:19px;font-weight:600;letter-spacing:.01em}
+.brand h1 span{color:var(--muted);font-weight:500;font-size:14px}
+.brand p{font-size:12px;color:var(--muted);margin-top:2px}
+.chips{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 11px;font-size:12px;color:var(--muted)}
+.chip b{color:var(--fg);font-weight:550}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--meta)}
+.chip.live .dot{background:var(--success)}.chip.live{border-color:color-mix(in oklab,var(--success),white 50%)}
+.lang{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px;padding-left:9px}
+.lang .globe{width:14px;height:14px;color:var(--muted)}
+.lang button{appearance:none;border:0;background:transparent;color:var(--muted);font:550 12px/1 var(--font-body);padding:6px 9px;border-radius:var(--radius-sm);cursor:pointer;transition:var(--motion-fast)}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-on)}
+
+.devbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;box-shadow:var(--elev-ring)}
+.devbar .grp{display:flex;align-items:center;gap:9px}
+.devbar label{font:600 10px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--meta)}
+.devbar select{font:500 13px/1 var(--font-body);color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;cursor:pointer}
+.devbar select:disabled{opacity:.5;cursor:not-allowed}
+.dev-status{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.dev-status .led{width:9px;height:9px;border-radius:50%;background:var(--meta);flex:none}
+.dev-status.on .led{background:var(--success);box-shadow:0 0 0 3px var(--tint-ready)}
+.dev-status.err .led{background:var(--danger);box-shadow:0 0 0 3px var(--tint-danger)}
+.dev-sep{width:1px;height:30px;background:var(--border)}
+.calib{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.calib .bar{width:84px;height:6px;border-radius:var(--radius-pill);background:var(--border-soft);overflow:hidden}
+.calib .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s linear}
+.devbar .spacer{margin-left:auto}
+
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar .title{display:flex;flex-direction:column;gap:2px}
+.toolbar .title h2{font-size:18px;font-weight:600}
+.toolbar .title p{font-size:12px;color:var(--muted)}
+.toolbar .controls{display:flex;gap:9px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.search{position:relative;display:flex;align-items:center}
+.search svg{position:absolute;left:11px;width:15px;height:15px;color:var(--meta);pointer-events:none}
+.search input{font:500 13px/1 var(--font-body);color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px 9px 32px;width:230px}
+.search input::placeholder{color:var(--meta)}
+.toolbar select{font:500 13px/1 var(--font-body);color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;cursor:pointer}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-soft);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.stat{background:var(--surface);padding:14px 18px}
+.stat .k{font:600 10px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--meta)}
+.stat .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;margin-top:8px}
+.stat .v small{font-size:13px;color:var(--muted);font-weight:400;margin-left:4px}
+
+.wl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--elev-ring)}
+.wl{width:100%;border-collapse:collapse;font-size:13px}
+.wl thead th{position:sticky;top:0;background:var(--surface);text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);font:600 10px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--meta);cursor:pointer;user-select:none;white-space:nowrap}
+.wl thead th .ar{opacity:0;margin-left:4px}.wl thead th.sorted .ar{opacity:1;color:var(--accent)}
+.wl tbody tr{border-bottom:1px solid var(--border-soft);cursor:pointer;transition:background var(--motion-fast)}
+.wl tbody tr:hover{background:var(--tint-accent)}
+.wl tbody tr:last-child{border-bottom:0}
+.wl td{padding:12px 14px;white-space:nowrap;color:var(--fg-2)}
+.wl td.pid,.wl td.acc,.wl td.time{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.wl td.name{color:var(--fg);font-weight:550;font-size:13.5px}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:var(--radius-pill);padding:4px 10px;font:600 11px/1 var(--font-mono);letter-spacing:.02em}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge.b-waiting{color:var(--warn-ink);background:var(--tint-warn)}
+.badge.b-prog{color:var(--accent);background:var(--tint-accent)}
+.badge.b-done{color:var(--ready-ink);background:var(--tint-ready)}
+.badge.b-scheduled{color:var(--muted);background:var(--border-soft)}
+.mode-tag{display:inline-block;font:600 10px/1 var(--font-mono);letter-spacing:.03em;padding:3px 7px;border-radius:var(--radius-pill);border:1px solid var(--border);margin-left:6px}
+.mode-tag.m-ped,.mode-tag.m-bar{color:var(--warn-ink);border-color:color-mix(in oklab,var(--warn),white 55%)}
+.go-cell{color:var(--accent);font-weight:600}
+
+.pbanner{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;box-shadow:var(--elev-ring)}
+.pbanner .back{appearance:none;display:inline-flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 13px;font:550 13px/1 var(--font-body);color:var(--fg);cursor:pointer}
+.pbanner .back:hover{border-color:#898989;transform:translateX(-2px)}
+.pbanner .who{display:flex;flex-direction:column;gap:3px}
+.pbanner .who .nm{font-size:18px;font-weight:600}
+.pbanner .who .meta{font:12px/1.4 var(--font-mono);color:var(--muted)}
+.pbanner .facts{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+.pbanner .fact{display:flex;flex-direction:column;gap:3px}
+.pbanner .fact .k{font:600 10px/1 var(--font-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--meta)}
+.pbanner .fact .v{font-size:13.5px;font-weight:550;font-family:var(--font-mono)}
+
+.banner{position:relative;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface);padding:18px 22px;display:flex;align-items:center;gap:22px;box-shadow:var(--elev-ring)}
+.banner::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--state-c,var(--track-line))}
+.banner .state-key{display:flex;flex-direction:column;gap:7px;min-width:320px}
+.state-label{display:flex;align-items:center;gap:12px}
+.state-label .ledge{width:14px;height:14px;border-radius:50%;background:var(--state-c,var(--track-line));box-shadow:0 0 0 4px color-mix(in oklab,var(--state-c,var(--track-line)),white 82%)}
+.state-label strong{font-size:25px;font-weight:600;letter-spacing:-.01em}
+.state-sub{font-size:12.5px;color:var(--muted);min-height:1.4em}
+.banner .safety{margin-left:auto;text-align:right;max-width:330px}
+.banner .safety .lock{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font:600 11px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase}
+.banner .safety p{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.45}
+
+.console{display:grid;grid-template-columns:1fr 360px;gap:14px;align-items:start}
+@media(max-width:1120px){.console{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.card.raise{box-shadow:var(--elev-raised)}
+.card>header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px}
+.card>header h2{font-size:13px;font-weight:600;letter-spacing:.01em}
+.card>header .meta{font:11px/1 var(--font-mono);color:var(--meta);letter-spacing:.03em}
+
+.wave-wrap{position:relative;background:var(--bg);border:1px solid var(--border-soft);border-radius:var(--radius-md);overflow:hidden}
+canvas#wave{display:block;width:100%;height:280px}
+.wave-flag{position:absolute;top:10px;left:12px;font:600 11px/1 var(--font-mono);letter-spacing:.06em;color:var(--muted);background:color-mix(in oklab,var(--bg),transparent 8%);padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border-soft)}
+.legend{display:flex;gap:16px;margin-top:11px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border-soft);border:1px solid var(--border-soft);border-radius:var(--radius-md);overflow:hidden}
+.metric{background:var(--surface);padding:12px 14px}
+.metric .k{font-size:11px;color:var(--meta)}
+.metric .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:21px;font-weight:550;margin-top:5px}
+.metric .v small{font-size:11px;color:var(--muted);font-weight:400;margin-left:3px}
+.metric.flag{background:var(--tint-warn)}.metric.flag .v{color:var(--warn-ink)}
+
+.lut{width:100%;border-collapse:collapse;font-size:12.5px}
+.lut th,.lut td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-soft)}
+.lut th{font:600 10px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--meta)}
+.lut td.n{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.lut tr.active{background:var(--tint-accent)}.lut tr.active td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.lut .tag{display:inline-block;font:600 10px/1 var(--font-mono);letter-spacing:.04em;color:var(--warn-ink);background:var(--tint-warn);border-radius:var(--radius-pill);padding:3px 8px}
+.lut tfoot td{color:var(--muted);font-size:11.5px;border-bottom:0;padding-top:10px}
+
+.rec.disabled{opacity:.5}
+.rec-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:stretch}
+@media(max-width:560px){.rec-grid{grid-template-columns:1fr 1fr}}
+.dose{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px 18px;display:flex;flex-direction:column;justify-content:center}
+.dose .k{font:600 11px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--meta)}
+.dose .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:46px;font-weight:600;line-height:1;margin-top:10px;letter-spacing:-.01em}
+.dose .v.empty{color:var(--meta);font-size:30px}
+.dose .u{font-size:13px;color:var(--muted);margin-top:5px}
+.rec-action{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-width:152px}
+.rec-status{font-size:12px;color:var(--muted);line-height:1.45}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:var(--radius-pill);padding:4px 10px;font:600 11px/1 var(--font-mono);letter-spacing:.04em}
+.pill.ok{background:var(--tint-ready);color:var(--ready-ink)}.pill.warn{background:var(--tint-warn);color:var(--warn-ink)}
+.rec-foot{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;font:11px/1.4 var(--font-mono);color:var(--meta)}
+.rec-foot b{color:var(--muted);font-weight:550}
+.notice{display:flex;gap:12px;align-items:flex-start;background:var(--tint-warn);border:1px solid color-mix(in oklab,var(--warn),white 55%);border-radius:var(--radius-md);padding:14px 16px}
+.notice svg{flex:none;color:var(--warn-ink);margin-top:1px}
+.notice .t{font-size:13px;font-weight:600}.notice .d{font-size:12px;color:var(--muted);margin-top:3px}
+
+.field{margin-bottom:14px}.field:last-child{margin-bottom:0}
+.field>label{display:block;font:600 10px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--meta);margin-bottom:8px}
+.readonly{font-size:12.5px;color:var(--muted);background:var(--bg);border:1px dashed var(--border);border-radius:var(--radius-sm);padding:9px 12px}
+.slider{display:flex;align-items:center;gap:11px}
+.slider input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+.slider .val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;color:var(--fg);min-width:62px;text-align:right}
+
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;border-radius:var(--radius-sm);padding:11px 14px;font:550 13px/1 var(--font-body);cursor:pointer;transition:var(--motion-fast) var(--ease-standard);border:1px solid var(--border);background:var(--surface);color:var(--fg)}
+.btn:hover:not(:disabled){border-color:#898989;transform:translateX(2px)}
+.btn:active:not(:disabled){transform:translateX(0)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+.btn.primary{background:var(--accent);color:var(--accent-on);border-color:transparent;font-weight:600}
+.btn.primary:hover:not(:disabled){background:var(--accent-hover)}
+.btn.approve{background:var(--success);color:#063d12;border-color:transparent;font-weight:600}
+.btn.approve:hover:not(:disabled){background:color-mix(in oklab,var(--success),black 10%)}
+.btn.danger{color:var(--danger);border-color:color-mix(in oklab,var(--danger),white 55%)}
+.btn.danger:hover:not(:disabled){background:var(--tint-danger);border-color:var(--danger)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+
+.fault-grid{display:flex;flex-direction:column;gap:8px}
+.fault{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:9px 12px}
+.fault .lbl{font-size:12.5px}.fault .lbl small{display:block;color:var(--meta);font-size:11px;margin-top:1px}
+.fault button{appearance:none;border:1px solid color-mix(in oklab,var(--danger),white 55%);background:transparent;color:var(--danger);font:600 11px/1 var(--font-mono);letter-spacing:.04em;padding:7px 10px;border-radius:var(--radius-sm);cursor:pointer;text-transform:uppercase}
+.fault button:hover:not(:disabled){background:var(--tint-danger)}.fault button:disabled{opacity:.35;cursor:not-allowed}
+
+.stream{display:flex;flex-direction:column;max-height:180px;overflow-y:auto;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--bg)}
+.stream::-webkit-scrollbar,.log::-webkit-scrollbar{width:8px}
+.stream::-webkit-scrollbar-thumb,.log::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.ev{display:grid;grid-template-columns:64px 1fr auto;gap:9px;align-items:center;padding:7px 11px;border-bottom:1px solid var(--border-soft);font-size:11.5px}
+.ev:last-child{border-bottom:0}
+.ev .tp{font:600 10px/1 var(--font-mono);padding:3px 6px;border-radius:var(--radius-pill);color:var(--muted);background:var(--surface);border:1px solid var(--border-soft);text-align:center}
+.ev .tp.resp{color:var(--accent);border-color:color-mix(in oklab,var(--accent),white 60%);background:var(--tint-accent)}
+.ev .tp.expo{color:var(--ready-ink);border-color:color-mix(in oklab,var(--success),white 55%);background:var(--tint-ready)}
+.ev .tp.err{color:var(--danger);border-color:color-mix(in oklab,var(--danger),white 55%);background:var(--tint-danger)}
+.ev .body{color:var(--fg-2);font-family:var(--font-mono);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .t{font-family:var(--font-mono);color:var(--meta);font-size:10.5px}
+
+.log{display:flex;flex-direction:column;max-height:220px;overflow-y:auto;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--bg)}
+.log-row{display:grid;grid-template-columns:34px 60px 1fr auto;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border-soft);font-size:12px}
+.log-row:last-child{border-bottom:0}
+.log-row .seq{font-family:var(--font-mono);color:var(--meta)}
+.log-row .ts{font-family:var(--font-mono);color:var(--muted);font-size:11px}
+.log-row .ty{font-weight:500}.log-row .ty em{font-style:normal;color:var(--muted);font-weight:400}
+.log-row .hash{font-family:var(--font-mono);font-size:10.5px;color:var(--meta)}
+.log-row[data-sev="ready"] .ty{color:var(--ready-ink)}.log-row[data-sev="warn"] .ty{color:var(--warn-ink)}.log-row[data-sev="abort"] .ty{color:var(--danger)}
+.empty{padding:20px;text-align:center;color:var(--meta);font-size:12.5px}
+.verify-out{font:11.5px/1.4 var(--font-mono);margin-top:10px;color:var(--muted)}.verify-out.ok{color:var(--ready-ink)}
+
+.console.safe .col .card:not([data-keep]){opacity:.45;pointer-events:none;filter:grayscale(.35)}
+.hidden{display:none!important}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--meta);border-top:1px solid var(--border-soft);padding-top:14px}
+.kbd{font-family:var(--font-mono);font-size:10.5px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px 5px;color:var(--muted)}
+/* settings */
+.chip.gear{cursor:pointer;padding:7px 9px;color:var(--muted);transition:color var(--motion-fast) var(--ease-standard),border-color var(--motion-fast) var(--ease-standard)}
+.chip.gear svg{width:16px;height:16px}
+.chip.gear:hover{color:var(--accent);border-color:var(--accent)}
+.icon-close{appearance:none;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);cursor:pointer;transition:color var(--motion-fast) var(--ease-standard),border-color var(--motion-fast) var(--ease-standard),transform var(--motion-fast) var(--ease-standard)}
+.icon-close svg{width:18px;height:18px}
+.icon-close:hover{color:var(--accent);border-color:var(--accent)}
+.icon-close:active{transform:scale(.94)}
+.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;align-items:start}
+.set-status{margin-top:12px;font-size:12.5px;color:var(--muted);font-family:var(--font-mono)}
+.set-status.ok{color:var(--ready-ink)}
+.set-status.bad{color:var(--danger)}
+.kv{margin-top:12px}
+.kv .row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px}
+.kv .row:last-child{border-bottom:none}
+.kv .row span{color:var(--muted)}
+.kv .row b{color:var(--fg);font-weight:550;font-family:var(--font-mono)}
+.kv .row b.on{color:var(--ready-ink)}
+.kv .row b.off{color:var(--danger)}
+.kv .empty{font-size:12.5px;color:var(--meta);padding:6px 0}
+#set-origin{width:100%;font-family:var(--font-mono)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- top bar -->
+  <header class="topbar" data-od-id="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="37" height="37" rx="9" stroke="var(--accent)" stroke-width="1.6" opacity=".4"/>
+        <path d="M6 24 C11 24 11 14 16 14 C21 14 20 31 26 31 C31 31 30 19 34 19" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="26" cy="31" r="2.6" fill="var(--success)"/>
+      </svg>
+      <div>
+        <h1>AERA PACS <span data-i18n="brand_sub">/ Respiration-Gated Exposure Assist</span></h1>
+        <p data-i18n="tagline">Chest X-ray worklist · Reference-only guidance · The system never fires the X-ray</p>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="lang" id="lang-toggle" aria-label="Language">
+        <svg class="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>
+        <button data-lang="en" aria-pressed="true">EN</button>
+        <button data-lang="ko" aria-pressed="false">한국어</button>
+      </span>
+      <span class="chip" id="cam-chip"><span class="dot"></span> <b id="cam-state" data-i18n="cam_disconnected">Device disconnected</b></span>
+      <span class="chip"><b>edge-001</b> · xray-room-1</span>
+      <span class="chip num" id="clock">--:--:--</span>
+      <button class="chip gear" id="btn-settings" data-i18n-title="set_open" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H8a1.65 1.65 0 0 0 1-1.51V2a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V8a1.65 1.65 0 0 0 1.51 1H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== VIEW A: WORKLIST ===== -->
+  <div id="view-worklist" data-od-id="worklist">
+    <section class="toolbar" style="margin-bottom:14px">
+      <div class="title"><h2 data-i18n="wl_title">Today's worklist</h2><p data-i18n="wl_date">2026-06-29 · xray-room-1 · DX chest PA</p></div>
+      <div class="controls">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+          <input id="wl-search" type="text" data-i18n-ph="search_ph" placeholder="Search name or ID" />
+        </div>
+        <select id="f-modality"><option value="" data-i18n="f_mod_all">All modalities</option><option value="DX">DX</option><option value="CR">CR</option></select>
+        <select id="f-status">
+          <option value="" data-i18n="f_status_all">All statuses</option>
+          <option value="scheduled" data-i18n="st_scheduled">Scheduled</option>
+          <option value="waiting" data-i18n="st_waiting">Waiting</option>
+          <option value="prog" data-i18n="st_prog">In progress</option>
+          <option value="done" data-i18n="st_done">Completed</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="stats" style="margin-bottom:14px" data-od-id="wl-stats">
+      <div class="stat"><div class="k" data-i18n="stat_total">Total</div><div class="v"><span id="s-total">0</span><small data-i18n="unit_cases">cases</small></div></div>
+      <div class="stat"><div class="k" data-i18n="st_waiting">Waiting</div><div class="v"><span id="s-wait">0</span><small data-i18n="unit_cases">cases</small></div></div>
+      <div class="stat"><div class="k" data-i18n="st_prog">In progress</div><div class="v"><span id="s-prog">0</span><small data-i18n="unit_cases">cases</small></div></div>
+      <div class="stat"><div class="k" data-i18n="st_done">Completed</div><div class="v"><span id="s-done">0</span><small data-i18n="unit_cases">cases</small></div></div>
+    </section>
+
+    <section class="wl-card" data-od-id="wl-table">
+      <table class="wl">
+        <thead><tr>
+          <th data-sort="status" data-i18n="col_status">Status<span class="ar">↓</span></th>
+          <th data-sort="acc">Accession<span class="ar">↓</span></th>
+          <th data-sort="pid" data-i18n="col_pid">Patient ID<span class="ar">↓</span></th>
+          <th data-sort="name" data-i18n="col_name">Patient<span class="ar">↓</span></th>
+          <th data-sort="age" data-i18n="col_age">Sex/Age<span class="ar">↓</span></th>
+          <th data-sort="modality" data-i18n="col_exam">Exam<span class="ar">↓</span></th>
+          <th data-sort="desc" data-i18n="col_examname">Study<span class="ar">↓</span></th>
+          <th data-sort="time" data-i18n="col_time">Scheduled<span class="ar">↓</span></th>
+          <th data-sort="dept" data-i18n="col_dept">Referring<span class="ar">↓</span></th>
+          <th></th>
+        </tr></thead>
+        <tbody id="wl-body"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- ===== VIEW B: STUDY CONSOLE ===== -->
+  <div id="view-study" class="hidden" data-od-id="study">
+    <section class="pbanner" style="margin-bottom:14px" data-od-id="patient-banner">
+      <button class="back" id="btn-back"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> <span data-i18n="back">Worklist</span></button>
+      <div class="who"><div class="nm" id="pb-name">—</div><div class="meta" id="pb-meta">—</div></div>
+      <div class="facts">
+        <div class="fact"><span class="k" data-i18n="fact_examname">Study</span><span class="v" id="pb-desc">—</span></div>
+        <div class="fact"><span class="k" data-i18n="fact_mode">Patient mode</span><span class="v" id="pb-mode">—</span></div>
+        <div class="fact"><span class="k" data-i18n="fact_th">Baseline thickness</span><span class="v" id="pb-th">—</span></div>
+        <div class="fact"><span class="k" data-i18n="fact_dept">Referring</span><span class="v" id="pb-dept">—</span></div>
+      </div>
+    </section>
+
+    <section class="banner" id="banner" style="--state-c:var(--track-line);margin-bottom:14px" data-od-id="state-banner">
+      <div class="state-key">
+        <span class="eyebrow" data-i18n="state_eyebrow">Respiration gating state</span>
+        <div class="state-label"><span class="ledge"></span><strong id="state-name">—</strong></div>
+        <div class="state-sub" id="state-sub">—</div>
+      </div>
+      <div class="safety">
+        <span class="lock"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Reference&nbsp;Only</span>
+        <p data-i18n="safety_text">No recommendation is applied before operator approval. On any fault the console drops to Manual Mode.</p>
+      </div>
+    </section>
+
+    <div class="console" id="console">
+      <div class="col">
+        <section class="card raise" data-od-id="waveform">
+          <header><h2 data-i18n="wave_title">Chest depth waveform · dZ/dt gating</h2><span class="meta">depth camera · ROI mean(z)</span></header>
+          <div class="wave-wrap"><canvas id="wave" width="900" height="280"></canvas><div class="wave-flag" id="wave-flag">z(t)</div></div>
+          <div class="legend">
+            <span><i style="background:var(--track-line)"></i> <span data-i18n="lg_z">Surface depth z</span></span>
+            <span><i style="background:var(--success)"></i> <span data-i18n="lg_stable">Breath-hold (stable)</span></span>
+            <span><i style="background:var(--warn)"></i> <span data-i18n="lg_unstable">Unstable / motion</span></span>
+            <span><i style="background:var(--danger)"></i> <span data-i18n="lg_abort">Cough / spike abort</span></span>
+          </div>
+        </section>
+        <section class="card" data-od-id="signal">
+          <header><h2 data-i18n="sig_title">Signal analysis</h2><span class="meta" id="dur-meta">stable 0 ms</span></header>
+          <div class="metrics">
+            <div class="metric"><div class="k" data-i18n="m_z">Surface depth z</div><div class="v"><span id="m-z">—</span><small>mm</small></div></div>
+            <div class="metric"><div class="k" data-i18n="m_dz">Velocity dZ/dt</div><div class="v"><span id="m-dz">—</span><small>mm/s</small></div></div>
+            <div class="metric" id="m-d2-cell"><div class="k" data-i18n="m_d2">Accel d²Z/dt²</div><div class="v"><span id="m-d2">—</span><small>mm/s²</small></div></div>
+            <div class="metric"><div class="k" data-i18n="m_th">Est. thickness</div><div class="v"><span id="m-th">—</span><small>mm</small></div></div>
+            <div class="metric"><div class="k" data-i18n="m_conf">Confidence</div><div class="v"><span id="m-conf">—</span></div></div>
+            <div class="metric" id="m-px-cell"><div class="k" data-i18n="m_px">Valid pixel ratio</div><div class="v"><span id="m-px">—</span></div></div>
+          </div>
+        </section>
+        <section class="card" data-od-id="lut">
+          <header><h2 data-i18n="lut_title">Exposure LUT · guardrails</h2><span class="meta">lut_v1.3.0 · chest_pa</span></header>
+          <table class="lut">
+            <thead><tr><th data-i18n="lc_range">Thickness range (mm)</th><th data-i18n="lc_mode">Mode</th><th>kVp</th><th>mAs</th><th data-i18n="lc_note">Note</th></tr></thead>
+            <tbody id="lut-body"></tbody>
+            <tfoot><tr><td colspan="5" data-i18n="lut_foot">Guardrail clamp: kVp 60–120 · mAs 1–80. Rows pending clinical review yield no automatic recommendation.</td></tr></tfoot>
+          </table>
+        </section>
+        <section class="card rec disabled" id="rec-card" data-od-id="recommendation">
+          <header><h2 data-i18n="rec_title">Exposure recommendation (reference)</h2><span class="meta" id="rec-region">chest_pa · adult</span></header>
+          <div id="rec-body"></div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="card" data-keep data-od-id="controls">
+          <header><h2 data-i18n="ctl_title">Acquisition session</h2><span class="meta">operator</span></header>
+          <div class="field">
+            <button class="btn primary" id="btn-session" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5v14l11-7z"/></svg> <span id="session-lbl" data-i18n="session_start">Start session</span></button>
+          </div>
+          <div class="field"><label data-i18n="ctl_region">Body region</label><div class="readonly" data-i18n="region_ro">chest_pa · Chest PA (Phase 1 fixed)</div></div>
+          <div class="field"><label data-i18n="ctl_mode">Patient mode</label><div class="readonly" id="ctl-mode">—</div></div>
+          <div class="field"><label data-i18n="ctl_guided">Guided breath-hold</label>
+            <div class="btn-row">
+              <button class="btn" id="btn-cue" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> <span data-i18n="cue_btn">Breath-hold cue</span></button>
+              <button class="btn danger" id="btn-cough" disabled data-i18n="cough_btn">Trigger cough</button>
+            </div>
+            <div class="btn-row" style="margin-top:9px">
+              <button class="btn" id="btn-abort" disabled data-i18n="abort_btn">Abort</button>
+              <button class="btn" id="btn-manual" disabled><span id="manual-lbl" data-i18n="manual_btn">Manual mode</span></button>
+            </div>
+          </div>
+        </section>
+        <section class="card" data-keep data-od-id="signal-source">
+          <header><h2 data-i18n="src_title">Signal source · Mock camera</h2><span class="meta">camera.yaml</span></header>
+          <div class="field slider"><label style="margin:0;min-width:84px" data-i18n="src_period">Breath period</label><input type="range" id="sl-period" min="2200" max="5600" step="100" value="3600"><span class="val" id="v-period">3600 ms</span></div>
+          <div class="field slider"><label style="margin:0;min-width:84px" data-i18n="src_amp">Breath amplitude</label><input type="range" id="sl-amp" min="3" max="14" step="0.5" value="7"><span class="val" id="v-amp">7.0 mm</span></div>
+          <div class="readonly" data-i18n="src_note">Baseline chest depth is set automatically from the selected patient.</div>
+        </section>
+        <section class="card" data-keep data-od-id="faults">
+          <header><h2 data-i18n="flt_title">Fault injection → safe state</h2><span class="meta">FI-*</span></header>
+          <div class="fault-grid">
+            <div class="fault"><div class="lbl"><span data-i18n="flt_cam">Camera disconnect</span><small>USB disconnect</small></div><button data-fault="camera_disconnect" disabled data-i18n="flt_inject">Inject</button></div>
+            <div class="fault"><div class="lbl"><span data-i18n="flt_drift">Calibration drift</span><small>calibration drift</small></div><button data-fault="calibration_drift" disabled data-i18n="flt_inject">Inject</button></div>
+            <div class="fault"><div class="lbl"><span data-i18n="flt_lowconf">Low-confidence frame</span><small>low confidence</small></div><button data-fault="low_confidence" disabled data-i18n="flt_inject">Inject</button></div>
+          </div>
+          <button class="btn" id="btn-resume" style="margin-top:12px;display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg> <span data-i18n="resume_btn">Clear fault · resume tracking</span></button>
+        </section>
+        <section class="card" data-keep data-od-id="events">
+          <header><h2 data-i18n="ev_title">Event stream</h2><span class="meta">/ws/v1/events</span></header>
+          <div class="stream" id="events"><div class="empty" data-i18n="ev_empty">Live topics appear here during a session.</div></div>
+        </section>
+        <section class="card" data-keep data-od-id="audit">
+          <header><h2 data-i18n="aud_title">Audit log · hash chain</h2><span class="meta">SHA-256</span></header>
+          <div class="log" id="log"><div class="empty" data-i18n="aud_empty">Study events are recorded here.</div></div>
+          <button class="btn" id="btn-verify" style="margin-top:11px" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> <span data-i18n="verify_btn">Verify chain integrity</span></button>
+          <div class="verify-out" id="verify-out"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== VIEW C: SETTINGS ===== -->
+  <div id="view-settings" class="hidden" data-od-id="settings">
+    <section class="toolbar" style="margin-bottom:14px">
+      <div class="title"><h2 data-i18n="set_title">Settings</h2><p data-i18n="set_sub">Device &amp; server connections</p></div>
+      <button class="icon-close" id="btn-settings-back" data-i18n-title="set_close" title="Close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </section>
+
+    <div class="set-grid">
+      <!-- Server / gateway connection -->
+      <section class="card" data-od-id="set-server">
+        <header><h2 data-i18n="set_server_title">Server connection</h2><span class="meta">REST · WS</span></header>
+        <div class="field"><label data-i18n="set_origin_label">Gateway origin</label>
+          <input id="set-origin" type="text" placeholder="http://localhost:8080" /></div>
+        <div class="readonly" data-i18n="set_hint" style="margin-bottom:10px">Point the console at a different edge box, then Test &amp; save.</div>
+        <button class="btn primary" id="btn-set-test" style="width:auto;padding:9px 16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span data-i18n="set_test">Test &amp; save</span></button>
+        <div class="set-status" id="set-server-status">—</div>
+        <div class="kv" id="set-health"></div>
+      </section>
+
+      <!-- Camera / depth sensor -->
+      <section class="card" data-od-id="set-camera">
+        <header><h2 data-i18n="set_camera_title">Camera · depth sensor</h2><span class="meta">camera.yaml</span></header>
+        <div class="field"><label for="provider" data-i18n="dev_camera">Camera</label>
+          <select id="provider">
+            <option value="mock" data-i18n="opt_mock">Mock depth camera (no-HW)</option>
+            <option value="realsense">Intel RealSense D435</option>
+            <option value="orbbec">Orbbec Femto</option>
+          </select></div>
+        <button class="btn primary" id="btn-connect" style="width:auto;padding:9px 16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7H7a5 5 0 0 0 0 10h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>
+          <span id="connect-lbl" data-i18n="connect">Connect device</span></button>
+        <div class="dev-status" id="dev-status" style="margin-top:12px"><span class="led"></span><span id="dev-status-t" data-i18n="conn_wait">Awaiting connection</span></div>
+        <div class="set-status" id="set-cam-status">—</div>
+      </section>
+
+      <!-- Calibration -->
+      <section class="card" data-od-id="set-calib">
+        <header><h2 data-i18n="dev_calib">Calibration</h2><span class="meta">GTS-002</span></header>
+        <div class="calib" style="flex-wrap:wrap;gap:10px">
+          <div class="bar" style="flex:1;min-width:140px"><i id="calib-bar"></i></div>
+          <span id="calib-t" class="num" data-i18n="calib_none">Not run</span>
+        </div>
+        <button class="btn" id="btn-calib" style="width:auto;padding:9px 14px;margin-top:12px" disabled data-i18n="calib_btn">Empty-bed calibration (GTS-002)</button>
+      </section>
+
+      <!-- Device info -->
+      <section class="card" data-od-id="set-device-info">
+        <header><h2 data-i18n="set_info_title">Device</h2><span class="meta">/health · /state</span></header>
+        <div class="kv" id="set-device"><div class="empty" data-i18n="set_offline">Connect to the gateway to read device info.</div></div>
+      </section>
+    </div>
+  </div>
+
+  <footer class="foot" data-od-id="footnote">
+    <span data-i18n="foot_note">AERA PACS · Phase 1 MVP · reference only · the X-ray machine's own manual workflow is untouched.</span>
+    <span id="foot-keys" data-i18n-html="foot_keys"><span class="kbd">S</span> session · <span class="kbd">B</span> cue · <span class="kbd">C</span> cough · <span class="kbd">A</span> approve · <span class="kbd">Esc</span> worklist</span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ========================= i18n ========================= */
+const I18N={
+  en:{
+    title:"AERA PACS · Respiration-Gated Exposure Assist",
+    brand_sub:"/ Respiration-Gated Exposure Assist",
+    tagline:"Chest X-ray worklist · Reference-only guidance · The system never fires the X-ray",
+    cam_disconnected:"Device disconnected",cam_mock:"Mock camera connected",cam_fallback:"Fallback: Mock",
+    dev_camera:"Camera",opt_mock:"Mock depth camera (no-HW)",connect:"Connect device",disconnect:"Disconnect",
+    conn_wait:"Awaiting connection",conn_on:"Connected · streaming",conn_fallback:"Connected (Mock fallback)",conn_err:"Fault detected",
+    dev_calib:"Calibration",calib_none:"Not run",calib_need:"Needs calibration",calib_running:"Calibrating…",calib_btn:"Empty-bed calibration (GTS-002)",
+    wl_title:"Today's worklist",wl_date:"2026-06-29 · xray-room-1 · DX chest PA",
+    search_ph:"Search name or ID",f_mod_all:"All modalities",f_status_all:"All statuses",
+    st_scheduled:"Scheduled",st_waiting:"Waiting",st_prog:"In progress",st_done:"Completed",
+    stat_total:"Total",unit_cases:"cases",
+    col_status:"Status",col_pid:"Patient ID",col_name:"Patient",col_age:"Sex/Age",col_exam:"Exam",col_examname:"Study",col_time:"Scheduled",col_dept:"Referring",
+    go_cell:"Open →",empty_rows:"No patients match the filter.",
+    back:"Worklist",fact_examname:"Study",fact_mode:"Patient mode",fact_th:"Baseline thickness",fact_dept:"Referring",
+    state_eyebrow:"Respiration gating state",safety_text:"No recommendation is applied before operator approval. On any fault the console drops to Manual Mode.",
+    wave_title:"Chest depth waveform · dZ/dt gating",lg_z:"Surface depth z",lg_stable:"Breath-hold (stable)",lg_unstable:"Unstable / motion",lg_abort:"Cough / spike abort",
+    sig_title:"Signal analysis",m_z:"Surface depth z",m_dz:"Velocity dZ/dt",m_d2:"Accel d²Z/dt²",m_th:"Est. thickness",m_conf:"Confidence",m_px:"Valid pixel ratio",
+    lut_title:"Exposure LUT · guardrails",lc_range:"Thickness range (mm)",lc_mode:"Mode",lc_note:"Note",lut_tag:"Pending clinical review",lut_can:"Recommendable",
+    lut_foot:"Guardrail clamp: kVp 60–120 · mAs 1–80. Rows pending clinical review yield no automatic recommendation.",
+    rec_title:"Exposure recommendation (reference)",dose_kvp:"Tube voltage",dose_mas:"Tube current × time",
+    rec_default:"A recommendation appears when a stable breath-hold is detected.",rec_within:"Within range",rec_clamped:"Clamped",
+    rec_msg_within:"Reference value — confirm before use.",rec_msg_clamp:"Reference value — clamped to safe range. Confirm before use.",
+    rec_approve:"Approve recommendation",rec_approved:"Approved · reference",rec_approve_pill:"Operator approved",
+    rec_approve_note:"Application is performed by the operator in the X-ray machine's manual workflow.",
+    rec_closed:"The acquisition window is closed. Induce a stable breath-hold again.",
+    rec_src:"Source",rec_th:"Thickness",rec_guard:"Guardrail",
+    manual_title:"Manual review required",manual_msg:"Manual review required — this mode provides no automatic recommendation.",
+    manual_detail:t=>`Thickness ${t} mm · the LUT row is pending clinical review, so no kVp/mAs is shown.`,
+    ctl_title:"Acquisition session",session_start:"Start session",session_stop:"End session",
+    ctl_region:"Body region",region_ro:"chest_pa · Chest PA (Phase 1 fixed)",ctl_mode:"Patient mode",mode_auto:" · auto manual review",
+    ctl_guided:"Guided breath-hold",cue_btn:"Breath-hold cue",cough_btn:"Trigger cough",abort_btn:"Abort",manual_btn:"Manual mode",resume_track:"Resume tracking",
+    src_title:"Signal source · Mock camera",src_period:"Breath period",src_amp:"Breath amplitude",src_note:"Baseline chest depth is set automatically from the selected patient.",
+    flt_title:"Fault injection → safe state",flt_cam:"Camera disconnect",flt_drift:"Calibration drift",flt_lowconf:"Low-confidence frame",flt_inject:"Inject",resume_btn:"Clear fault · resume tracking",
+    ev_title:"Event stream",ev_empty:"Live topics appear here during a session.",
+    aud_title:"Audit log · hash chain",aud_empty:"Study events are recorded here.",verify_btn:"Verify chain integrity",
+    verify_run:"Verifying…",verify_ok:n=>`✓ Chain integrity OK · ${n} links verified (genesis → #${String(n).padStart(2,"0")})`,
+    verify_bad:s=>`✗ Integrity violation — link #${String(s).padStart(2,"0")} mismatch`,
+    foot_note:"AERA PACS · Phase 1 MVP · reference only · the X-ray machine's own manual workflow is untouched.",
+    foot_keys:'<span class="kbd">S</span> session · <span class="kbd">B</span> cue · <span class="kbd">C</span> cough · <span class="kbd">A</span> approve · <span class="kbd">Esc</span> worklist',
+    state_idle:"Idle",state_tracking:"Tracking",state_cue_requested:"Breath-hold cue",state_stable_breath_hold:"Stable · ready",state_unstable:"Unstable",state_abort:"Abort",state_timeout:"Timeout",state_manual_mode:"Manual mode",
+    state_safe:"Safe state · Manual mode",
+    sub_default:"Connect and calibrate the device, then start the session.",
+    sub_ended:"Session ended.",
+    sub_tracking:"Tracking the breathing waveform — induce a stable breath-hold.",
+    sub_cue:(d,m)=>`Breath-hold cue sent — building a stable window (${d} / ${m} ms)`,
+    sub_stable:d=>`Stable breath-hold held ${d} ms · acquisition window open. Recommendation can be approved.`,
+    sub_unstable:"Motion exceeded the threshold.",
+    sub_abort:"Aborted by a sudden motion. Induce breathing again.",
+    sub_timeout:"Did not reach a stable window within the time limit.",
+    sub_manual:"Operator manual mode — automatic recommendation is disabled.",
+    sub_safe:r=>`${r} — recommendations are disabled. The X-ray machine's manual workflow is untouched.`,
+    mode_adult:"Adult",mode_pediatric:"Pediatric",mode_bariatric:"Bariatric",
+    reason_cough:"Cough/motion spike (d²Z/dt²)",reason_unstable:"Motion above threshold",reason_timeout:"Stable window not reached",
+    rsn_camera_disconnect:"Camera disconnect",rsn_calibration_drift:"Calibration drift",rsn_low_confidence:"Low-confidence frame",
+    lt_session_started:p=>`Session started <em>${p}</em>`,lt_session_ended:"Session ended",
+    lt_device_connected:p=>`Device connected <em>${p}</em>`,lt_device_disconnected:"Device disconnected",
+    lt_calibration_ok:d=>`Calibration OK <em>drift ${d}mm</em>`,lt_tracking:"Tracking started",lt_cue:"Breath-hold cue",
+    lt_rec:(k,m)=>`Recommendation issued <em>kVp ${k} · mAs ${m}</em>`,lt_manual_req:"Manual review required <em>no recommendation</em>",
+    lt_approved:(k,m)=>`Operator approved <em>kVp ${k} · mAs ${m}</em>`,lt_completed:a=>`Study completed <em>${a}</em>`,
+    lt_abort:r=>`Abort <em>${r}</em>`,lt_timeout:"Timeout",lt_unstable:"Unstable",lt_manual:"Manual mode",
+    lt_fault:r=>`Fault → safe state <em>${r}</em>`,lt_resume:"Fault cleared · resume tracking",
+    cam_fault:r=>`Fault: ${r}`,
+    set_open:"Settings",set_title:"Settings",set_sub:"Device & server connections",set_close:"Close",
+    set_server_title:"Server connection",set_origin_label:"Gateway origin (host:port)",
+    set_hint:"Point the console at a different edge box, then Test & save.",
+    set_test:"Test & save",set_testing:"Testing…",set_connecting:"Connecting…",set_conn_ok:"Connected",set_conn_fail:"Cannot reach gateway",
+    set_camera_title:"Camera · depth sensor",set_info_title:"Device",
+    set_offline:"Connect to the gateway to read device info.",
+    set_status:"Status",set_uptime:"Uptime",set_device_id:"Device ID",set_mode:"Mode",
+    set_camera_state:"Camera",set_calib_state:"Calibration",set_session:"Session"
+  },
+  ko:{
+    title:"AERA PACS · 호흡 게이팅 노출 보조 워크리스트",
+    brand_sub:"/ 호흡 게이팅 노출 보조",
+    tagline:"흉부 일반촬영 워크리스트 · 참고용 권고 · 시스템은 X선을 발사하지 않습니다",
+    cam_disconnected:"기기 미연결",cam_mock:"Mock 카메라 연결",cam_fallback:"폴백: Mock",
+    dev_camera:"카메라",opt_mock:"Mock 깊이 카메라 (no-HW)",connect:"기기 연결",disconnect:"연결 해제",
+    conn_wait:"연결 대기",conn_on:"연결됨 · 스트리밍",conn_fallback:"연결됨 (Mock 폴백)",conn_err:"결함 감지",
+    dev_calib:"캘리브레이션",calib_none:"미실행",calib_need:"보정 필요",calib_running:"보정 중…",calib_btn:"빈 침대 보정 (GTS-002)",
+    wl_title:"오늘 검사 워크리스트",wl_date:"2026-06-29 · xray-room-1 · DX 흉부 일반촬영",
+    search_ph:"환자명 또는 ID 검색",f_mod_all:"전체 모달리티",f_status_all:"전체 상태",
+    st_scheduled:"예약",st_waiting:"대기",st_prog:"촬영중",st_done:"완료",
+    stat_total:"전체",unit_cases:"건",
+    col_status:"상태",col_pid:"환자 ID",col_name:"환자명",col_age:"성별/나이",col_exam:"검사",col_examname:"검사명",col_time:"예약시간",col_dept:"의뢰과",
+    go_cell:"검사 →",empty_rows:"조건에 맞는 환자가 없습니다.",
+    back:"워크리스트",fact_examname:"검사명",fact_mode:"환자 모드",fact_th:"기준 두께",fact_dept:"의뢰과",
+    state_eyebrow:"호흡 게이팅 상태",safety_text:"모든 권고는 작업자 승인 전까지 적용되지 않습니다. 결함 발생 시 즉시 수동 모드로 전환됩니다.",
+    wave_title:"흉부 깊이 파형 · dZ/dt 게이팅",lg_z:"표면 깊이 z",lg_stable:"호흡 정지(안정)",lg_unstable:"불안정 / 모션",lg_abort:"기침·급변 abort",
+    sig_title:"신호 분석",m_z:"표면 깊이 z",m_dz:"속도 dZ/dt",m_d2:"가속도 d²Z/dt²",m_th:"추정 두께",m_conf:"신뢰도",m_px:"유효 픽셀비",
+    lut_title:"노출 LUT · 가드레일",lc_range:"두께 범위 (mm)",lc_mode:"모드",lc_note:"비고",lut_tag:"임상 검토 대기",lut_can:"권고 가능",
+    lut_foot:"가드레일 클램프: kVp 60–120 · mAs 1–80. 임상 검토 대기 행은 자동 권고 없음.",
+    rec_title:"노출 권고 (참고용)",dose_kvp:"관전압",dose_mas:"관전류·시간 곱",
+    rec_default:"안정적 호흡 정지가 감지되면 권고가 표시됩니다.",rec_within:"범위 내",rec_clamped:"클램프됨",
+    rec_msg_within:"참고 값 — 사용 전 작업자 확인 필요.",rec_msg_clamp:"참고 값 — 안전 범위로 클램프됨. 작업자 확인 필요.",
+    rec_approve:"권고 승인",rec_approved:"승인됨 · 참고용",rec_approve_pill:"작업자 승인",
+    rec_approve_note:"적용은 X선 장비 수동 워크플로에서 작업자가 수행합니다.",
+    rec_closed:"촬영 윈도우가 닫혔습니다. 안정 호흡 정지를 다시 유도하세요.",
+    rec_src:"출처",rec_th:"두께",rec_guard:"가드레일",
+    manual_title:"수동 검토 필요",manual_msg:"수동 검토 필요 — 이 모드는 자동 권고를 제공하지 않습니다.",
+    manual_detail:t=>`두께 ${t} mm · LUT 행이 임상 검토 대기 상태이므로 kVp/mAs를 표시하지 않습니다.`,
+    ctl_title:"촬영 세션",session_start:"세션 시작",session_stop:"세션 종료",
+    ctl_region:"부위 (body region)",region_ro:"chest_pa · 흉부 후전 (Phase 1 고정)",ctl_mode:"환자 모드",mode_auto:" · 자동 수동검토",
+    ctl_guided:"호흡 유도 (guided)",cue_btn:"호흡 정지 큐",cough_btn:"기침 유발",abort_btn:"중단(Abort)",manual_btn:"수동 전환",resume_track:"추적 재개",
+    src_title:"신호 소스 · Mock 카메라",src_period:"호흡 주기",src_amp:"호흡 진폭",src_note:"기준 흉부 깊이는 선택한 환자에서 자동 결정됩니다.",
+    flt_title:"결함 주입 → 세이프 스테이트",flt_cam:"카메라 연결 끊김",flt_drift:"캘리브레이션 드리프트",flt_lowconf:"저신뢰 프레임",flt_inject:"주입",resume_btn:"결함 해제 · 추적 재개",
+    ev_title:"이벤트 스트림",ev_empty:"세션 중 실시간 토픽이 표시됩니다.",
+    aud_title:"감사 로그 · 해시 체인",aud_empty:"검사 이벤트가 여기에 기록됩니다.",verify_btn:"체인 무결성 검증",
+    verify_run:"검증 중…",verify_ok:n=>`✓ 체인 무결성 OK · ${n}개 링크 검증됨 (genesis → #${String(n).padStart(2,"0")})`,
+    verify_bad:s=>`✗ 무결성 위반 — #${String(s).padStart(2,"0")} 링크 불일치`,
+    foot_note:"AERA PACS · Phase 1 MVP · 참고 전용 · 실제 X선 장비의 수동 워크플로는 영향받지 않습니다.",
+    foot_keys:'<span class="kbd">S</span> 세션 · <span class="kbd">B</span> 호흡 큐 · <span class="kbd">C</span> 기침 · <span class="kbd">A</span> 승인 · <span class="kbd">Esc</span> 워크리스트',
+    state_idle:"대기",state_tracking:"추적 중",state_cue_requested:"호흡 정지 유도",state_stable_breath_hold:"안정 · 촬영 준비",state_unstable:"불안정",state_abort:"중단(Abort)",state_timeout:"시간 초과",state_manual_mode:"수동 모드",
+    state_safe:"세이프 스테이트 · 수동 모드",
+    sub_default:"기기를 연결·보정한 뒤 세션을 시작하세요.",
+    sub_ended:"세션이 종료되었습니다.",
+    sub_tracking:"호흡 파형 추적 중 — 안정 호흡 정지를 유도하세요.",
+    sub_cue:(d,m)=>`호흡 정지 큐 전송됨 — 안정 구간 확보 중 (${d} / ${m} ms)`,
+    sub_stable:d=>`안정 호흡 정지 ${d} ms 지속 · 촬영 윈도우 열림. 권고 승인 가능.`,
+    sub_unstable:"모션이 임계값을 초과했습니다.",
+    sub_abort:"급격한 움직임으로 중단되었습니다. 다시 호흡을 유도하세요.",
+    sub_timeout:"제한 시간 내 안정 구간에 도달하지 못했습니다.",
+    sub_manual:"작업자 수동 모드 — 자동 권고가 비활성화되었습니다.",
+    sub_safe:r=>`${r} — 권고가 비활성화되었습니다. X선 장비 수동 워크플로는 영향받지 않습니다.`,
+    mode_adult:"성인",mode_pediatric:"소아",mode_bariatric:"고체중",
+    reason_cough:"기침·모션 급변 (d²Z/dt²)",reason_unstable:"임계 이상 모션",reason_timeout:"안정 구간 미도달",
+    rsn_camera_disconnect:"카메라 연결 끊김",rsn_calibration_drift:"캘리브레이션 드리프트",rsn_low_confidence:"저신뢰 프레임",
+    lt_session_started:p=>`세션 시작 <em>${p}</em>`,lt_session_ended:"세션 종료",
+    lt_device_connected:p=>`기기 연결 <em>${p}</em>`,lt_device_disconnected:"기기 연결 해제",
+    lt_calibration_ok:d=>`보정 완료 <em>drift ${d}mm</em>`,lt_tracking:"추적 시작",lt_cue:"호흡 정지 큐",
+    lt_rec:(k,m)=>`권고 발행 <em>kVp ${k} · mAs ${m}</em>`,lt_manual_req:"수동 검토 필요 <em>권고 없음</em>",
+    lt_approved:(k,m)=>`작업자 승인 <em>kVp ${k} · mAs ${m}</em>`,lt_completed:a=>`검사 완료 <em>${a}</em>`,
+    lt_abort:r=>`중단(abort) <em>${r}</em>`,lt_timeout:"시간 초과",lt_unstable:"불안정",lt_manual:"수동 모드 전환",
+    lt_fault:r=>`결함 → 세이프 스테이트 <em>${r}</em>`,lt_resume:"결함 해제 · 추적 재개",
+    cam_fault:r=>`결함: ${r}`,
+    set_open:"설정",set_title:"설정",set_sub:"기기 · 서버 연결",set_close:"닫기",
+    set_server_title:"서버 연결",set_origin_label:"게이트웨이 주소 (host:port)",
+    set_hint:"다른 엣지 장비를 지정한 뒤 연결 테스트·저장하세요.",
+    set_test:"연결 테스트 · 저장",set_testing:"확인 중…",set_connecting:"연결 중…",set_conn_ok:"연결됨",set_conn_fail:"게이트웨이에 연결할 수 없음",
+    set_camera_title:"카메라 · 깊이 센서",set_info_title:"기기 정보",
+    set_offline:"기기 정보를 보려면 게이트웨이에 연결하세요.",
+    set_status:"상태",set_uptime:"가동 시간",set_device_id:"기기 ID",set_mode:"모드",
+    set_camera_state:"카메라",set_calib_state:"캘리브레이션",set_session:"세션"
+  }
+};
+let lang=(()=>{try{const s=localStorage.getItem("aera:lang");return s==="ko"?"ko":"en";}catch(_){return "en";}})();
+function t(key,...a){const v=I18N[lang][key];return typeof v==="function"?v(...a):(v!==undefined?v:key);}
+
+/* ===== configs (smart-xray-assist) ===== */
+const GATING={stable_dz_dt:2.0,stable_var:0.03,min_stable_ms:1000,timeout_ms:10000,cough_d2z:25.0,min_valid_px:0.85,var_window:15,ema_z:0.3,ema_dz:0.3,ema_dt:0.2,warmup_frames:8};
+const GUARD={kvp_min:60,kvp_max:120,mas_min:1.0,mas_max:80.0};
+const LUT={version:"1.3.0",chest_pa:{
+  adult:[{min:0,max:180,kvp:70,mas:8.0},{min:181,max:240,kvp:82,mas:15.0},{min:241,max:320,kvp:90,mas:22.0}],
+  pediatric:[{min:0,max:120,kvp:60,mas:4.0,note:"pending clinical review"}],
+  bariatric:[{min:321,max:450,kvp:100,mas:40.0,note:"pending clinical review"}]}};
+const TICK_MS=50;
+const STATE_SEV={stable_breath_hold:"ready",unstable:"warn",timeout:"warn",manual_mode:"warn",abort:"abort"};
+const STATE_COLOR={idle:"--track-line",tracking:"--accent",cue_requested:"--accent",stable_breath_hold:"--success",unstable:"--warn",abort:"--danger",timeout:"--warn",manual_mode:"--warn"};
+
+/* names (per-patient, EN; localized at render) */
+const PATIENTS=[
+  {acc:"ACC2026-0630",pid:"P-100120",name:{en:"Lim Su-jeong",ko:"임수정"},sex:"F",age:56,modality:"DX",desc:{en:"Chest radiograph",ko:"흉부 일반촬영"},time:"08:55",dept:{en:"Pulmonology",ko:"호흡기내과"},mode:"adult",base:210,status:"done"},
+  {acc:"ACC2026-0631",pid:"P-100482",name:{en:"Kim Seo-yeon",ko:"김서연"},sex:"F",age:34,modality:"DX",desc:{en:"Chest radiograph",ko:"흉부 일반촬영"},time:"09:10",dept:{en:"Pulmonology",ko:"호흡기내과"},mode:"adult",base:215,status:"waiting"},
+  {acc:"ACC2026-0632",pid:"P-100517",name:{en:"Park Do-yoon",ko:"박도윤"},sex:"M",age:8,modality:"DX",desc:{en:"Pediatric chest",ko:"소아 흉부촬영"},time:"09:25",dept:{en:"Pediatrics",ko:"소아청소년과"},mode:"pediatric",base:110,status:"waiting"},
+  {acc:"ACC2026-0633",pid:"P-100488",name:{en:"Lee Jun-ho",ko:"이준호"},sex:"M",age:52,modality:"DX",desc:{en:"Chest follow-up",ko:"흉부 추적촬영"},time:"09:40",dept:{en:"Cardiology",ko:"순환기내과"},mode:"adult",base:235,status:"scheduled"},
+  {acc:"ACC2026-0634",pid:"P-100623",name:{en:"Choi Min-ji",ko:"최민지"},sex:"F",age:61,modality:"DX",desc:{en:"Chest radiograph",ko:"흉부 일반촬영"},time:"09:55",dept:{en:"Pulmonology",ko:"호흡기내과"},mode:"adult",base:205,status:"scheduled"},
+  {acc:"ACC2026-0635",pid:"P-100701",name:{en:"Jung Woo-sung",ko:"정우성"},sex:"M",age:47,modality:"DX",desc:{en:"Bariatric chest",ko:"비만 흉부촬영"},time:"10:10",dept:{en:"Family medicine",ko:"가정의학과"},mode:"bariatric",base:360,status:"scheduled"},
+  {acc:"ACC2026-0636",pid:"P-100355",name:{en:"Han Ji-min",ko:"한지민"},sex:"F",age:29,modality:"DX",desc:{en:"Chest radiograph",ko:"흉부 일반촬영"},time:"10:25",dept:{en:"Health screening",ko:"건강검진센터"},mode:"adult",base:195,status:"scheduled"},
+  {acc:"ACC2026-0637",pid:"P-100802",name:{en:"Oh Se-hoon",ko:"오세훈"},sex:"M",age:14,modality:"DX",desc:{en:"Pediatric chest",ko:"소아 흉부촬영"},time:"10:40",dept:{en:"Pediatrics",ko:"소아청소년과"},mode:"pediatric",base:118,status:"scheduled"},
+  {acc:"ACC2026-0638",pid:"P-100210",name:{en:"Yoon Ha-neul",ko:"윤하늘"},sex:"F",age:73,modality:"DX",desc:{en:"Chest follow-up",ko:"흉부 추적촬영"},time:"10:55",dept:{en:"Pulmonology",ko:"호흡기내과"},mode:"adult",base:225,status:"scheduled"},
+  {acc:"ACC2026-0639",pid:"P-100914",name:{en:"Kang Tae-oh",ko:"강태오"},sex:"M",age:39,modality:"DX",desc:{en:"Chest radiograph",ko:"흉부 일반촬영"},time:"11:10",dept:{en:"Thoracic surgery",ko:"흉부외과"},mode:"adult",base:245,status:"scheduled"}
+];
+
+/* ===== gating ===== */
+class Gating{
+  constructor(){this.reset();}
+  reset(){this.state="idle";this.zWin=[];this.emaZ=null;this.emaDz=null;this.emaDt=null;this.samples=0;this.prevZ=null;this.prevDz=null;this.prevT=null;this.stableSince=null;this.trackingSince=null;this.last={dur:0};}
+  startTracking(now){this.state="tracking";this.trackingSince=now;this.stableSince=null;}
+  requestCue(){if(this.state==="tracking"||this.state==="cue_requested")this.state="cue_requested";}
+  manualOverride(){this.state="manual_mode";}
+  derivatives(z,now){
+    if(this.prevZ===null||this.prevT===null){this.prevZ=z;this.prevT=now;return[0,0];}
+    const measured=Math.max(now-this.prevT,1);
+    this.emaDt=this.emaDt===null?measured:GATING.ema_dt*measured+(1-GATING.ema_dt)*this.emaDt;
+    const dt=this.emaDt,dzRaw=(z-this.prevZ)/dt*1000;
+    let dz=this.emaDz===null?dzRaw:GATING.ema_dz*dzRaw+(1-GATING.ema_dz)*this.emaDz;this.emaDz=dz;
+    let d2=0;if(this.prevDz!==null)d2=(dz-this.prevDz)/dt*1000;
+    this.prevZ=z;this.prevT=now;this.prevDz=dz;return[dz,d2];
+  }
+  isStable(dz,px){
+    if(Math.abs(dz)>=GATING.stable_dz_dt)return false;
+    if(px<=GATING.min_valid_px)return false;
+    if(this.zWin.length>=2){const m=this.zWin.reduce((a,b)=>a+b,0)/this.zWin.length;
+      const v=this.zWin.reduce((a,b)=>a+(b-m)*(b-m),0)/this.zWin.length;if(v>=GATING.stable_var)return false;}
+    return true;
+  }
+  update(zRaw,px,now){
+    this.emaZ=this.emaZ===null?zRaw:GATING.ema_z*zRaw+(1-GATING.ema_z)*this.emaZ;
+    const zS=this.emaZ,[dz,d2]=this.derivatives(zS,now);
+    this.samples++;this.zWin.push(zS);if(this.zWin.length>GATING.var_window)this.zWin.shift();
+    const emit=x=>({state:this.state,z:zS,dz,d2,...x});
+    if(this.state==="manual_mode")return emit({ready:false});
+    if(this.samples>GATING.warmup_frames&&["tracking","cue_requested","stable_breath_hold"].includes(this.state)&&Math.abs(d2)>GATING.cough_d2z){
+      this.state="abort";return emit({ready:false,reason:"reason_cough",abort:true});}
+    if(this.state==="idle")return emit({ready:false});
+    if(["tracking","cue_requested"].includes(this.state)&&this.trackingSince!==null&&now-this.trackingSince>GATING.timeout_ms){this.state="timeout";return emit({ready:false,reason:"reason_timeout"});}
+    const stable=this.isStable(dz,px);
+    if(["tracking","cue_requested"].includes(this.state)){
+      if(stable){if(this.stableSince===null)this.stableSince=now;const dur=now-this.stableSince;this.last.dur=dur;
+        if(dur>=GATING.min_stable_ms){this.state="stable_breath_hold";return emit({ready:true,dur});}
+        return emit({ready:false,dur});}
+      this.stableSince=null;this.last.dur=0;return emit({ready:false});}
+    if(this.state==="stable_breath_hold"){
+      if(!stable){this.state="unstable";this.stableSince=null;this.last.dur=0;return emit({ready:false,reason:"reason_unstable"});}
+      const dur=now-(this.stableSince||now);this.last.dur=dur;return emit({ready:true,dur});}
+    if(this.state==="unstable"){this.state="tracking";return emit({ready:false});}
+    return emit({ready:false});
+  }
+}
+function recommend(th,mode){
+  const rows=LUT.chest_pa[mode]||null;let row=null;
+  if(rows)for(const r of rows){if(th>=r.min&&th<=r.max){row=r;break;}}
+  if(!row||row.note==="pending clinical review")return{manual:true,kvp:null,mas:null};
+  const clamp=(v,lo,hi)=>{const c=Math.min(Math.max(v,lo),hi);return[c,c!==v];};
+  const[kvp,kc]=clamp(row.kvp,GUARD.kvp_min,GUARD.kvp_max),[mas,mc]=clamp(row.mas,GUARD.mas_min,GUARD.mas_max);
+  return{manual:false,kvp,mas,within:!(kc||mc)};
+}
+/* audit */
+const GENESIS="0".repeat(64);
+async function sha256(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+class Audit{
+  constructor(){this.entries=[];this.prev=GENESIS;}
+  async append(category,type,payload,sev){
+    const seq=this.entries.length+1,ts=clockMs();
+    const hash=await sha256(this.prev+JSON.stringify({seq,ts,category,type,payload}));
+    const e={seq,ts,category,type,payload,sev:sev||"info",hash,prev:this.prev};
+    this.prev=hash;this.entries.push(e);renderLog(e);setControls();return e;}
+  async verify(){let prev=GENESIS,ok=0;
+    for(const e of this.entries){const h=await sha256(prev+JSON.stringify({seq:e.seq,ts:e.ts,category:e.category,type:e.type,payload:e.payload}));
+      if(h!==e.hash)return{ok:false,broke:e.seq,count:ok};prev=h;ok++;}
+    return{ok:true,count:ok};}
+}
+
+/* ===== app state ===== */
+const $=id=>document.getElementById(id);
+let connected=false,calibrated=false,provider="mock",driftMm=null;
+let running=false,mode="adult",safe=false,faultKind=null;
+let lastReadyRec=null,lastRecommendationId=null,approved=false,sessionId=null,gating={state:"idle"};
+let evCount=0,lastR=null,_recSig=null;
+let currentPatient=null;
+let wlSearch="",wlMod="",wlStatus="",wlSort="time",wlDir=1;
+const sim={period:3600,amp:7};
+
+/* ===== live backend connection (smart-xray-assist FastAPI gateway) ===== */
+/* REST: /api/v1/{state,health,sessions,operator/*,audit,audit/verify}
+   WS:   /ws/v1/events → depth.summary · respiration.state · exposure.recommendation · system.error
+   When the page is served by the gateway, same-origin relative URLs are used;
+   when opened as a bare file://, it falls back to localhost:8080. */
+/* gateway origin: user-configurable in Settings, persisted to localStorage.
+   Empty string = same origin (page served by the gateway). */
+let API_ORIGIN=(()=>{try{const s=localStorage.getItem("aera:origin");if(s!==null)return s;}catch(_){}
+  return (location.protocol==="file:"||!location.host)?"http://localhost:8080":"";})();
+let ws=null,wsBackoff=500,wsReconnect=null,wsPing=null;
+let lastDepth={z:null,th:null,conf:null,px:null};
+let lastAuditEntries=[],auditCount=0,_auditTimer=null;
+const OPERATOR_ID="op_console";
+function wsUrl(){
+  let o=API_ORIGIN;
+  if(!o)o=(location.protocol==="https:"?"https:":"http:")+"//"+(location.host||"localhost:8080");
+  return o.replace(/^http/,"ws").replace(/\/+$/,"")+"/ws/v1/events";
+}
+function apiGet(p){return fetch(API_ORIGIN+p,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json();});}
+function apiPost(p,b){return fetch(API_ORIGIN+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b||{})})
+  .then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok)throw new Error(j.detail||("HTTP "+r.status));return j;}));}
+function sendAction(action,payload){
+  if(!sessionId)return Promise.resolve();
+  return apiPost("/api/v1/operator/action",{session_id:sessionId,operator_id:OPERATOR_ID,action,payload:payload||{}}).catch(()=>{});
+}
+
+function clockMs(){const d=new Date();return d.toTimeString().slice(0,8)+"."+String(d.getMilliseconds()).padStart(3,"0");}
+function fmt(n,p=1){return n.toFixed(p);}
+function baseTh(){return currentPatient?currentPatient.base:215;}
+function L(v){return typeof v==="object"?(v[lang]||v.en):v;}
+
+/* ===== worklist render ===== */
+function renderStats(){
+  $("s-total").textContent=PATIENTS.length;
+  $("s-wait").textContent=PATIENTS.filter(p=>p.status==="waiting").length;
+  $("s-prog").textContent=PATIENTS.filter(p=>p.status==="prog").length;
+  $("s-done").textContent=PATIENTS.filter(p=>p.status==="done").length;
+}
+function renderWorklist(){
+  renderStats();
+  let rows=PATIENTS.filter(p=>{
+    if(wlMod&&p.modality!==wlMod)return false;
+    if(wlStatus&&p.status!==wlStatus)return false;
+    if(wlSearch){const q=wlSearch.toLowerCase();if(!(L(p.name).toLowerCase().includes(q)||p.pid.toLowerCase().includes(q)))return false;}
+    return true;
+  });
+  const key=wlSort;
+  rows.sort((a,b)=>{let x=a[key],y=b[key];if(key==="name"||key==="desc"){x=L(x);y=L(y);}if(typeof x==="string"){x=x.toLowerCase();y=(""+y).toLowerCase();}return(x>y?1:x<y?-1:0)*wlDir;});
+  const body=$("wl-body");
+  if(!rows.length){body.innerHTML=`<tr><td colspan="10" class="empty">${t("empty_rows")}</td></tr>`;}
+  else body.innerHTML=rows.map(p=>{
+    const tag=p.mode==="pediatric"?`<span class="mode-tag m-ped">${t("mode_pediatric")}</span>`:p.mode==="bariatric"?`<span class="mode-tag m-bar">${t("mode_bariatric")}</span>`:'';
+    return `<tr data-acc="${p.acc}">
+      <td><span class="badge b-${p.status}">${t("st_"+p.status)}</span></td>
+      <td class="acc">${p.acc}</td><td class="pid">${p.pid}</td>
+      <td class="name">${L(p.name)}${tag}</td>
+      <td>${p.sex}/${p.age}</td><td>${p.modality} · CHEST PA</td>
+      <td>${L(p.desc)}</td><td class="time">${p.time}</td><td>${L(p.dept)}</td>
+      <td class="go-cell">${t("go_cell")}</td></tr>`;
+  }).join("");
+  document.querySelectorAll(".wl thead th").forEach(th=>{
+    th.classList.toggle("sorted",th.dataset.sort===wlSort);
+    const ar=th.querySelector(".ar");if(ar)ar.textContent=wlDir>0?"↓":"↑";
+  });
+}
+function updateRowStatus(p){
+  const tr=$("wl-body").querySelector(`tr[data-acc="${p.acc}"]`);
+  if(tr){const b=tr.querySelector(".badge");b.className="badge b-"+p.status;b.textContent=t("st_"+p.status);}
+  renderStats();
+}
+
+/* ===== view switching ===== */
+function openStudy(acc){
+  const p=PATIENTS.find(x=>x.acc===acc);if(!p)return;
+  currentPatient=p;mode=p.mode;
+  running=false;
+  gating={state:"idle"};waveBuf=[];lastReadyRec=null;lastRecommendationId=null;approved=false;_recSig=null;safe=false;lastR=null;lastDepth={z:null,th:null,conf:null,px:null};
+  $("console").classList.remove("safe");$("rec-card").classList.add("disabled");resetRecBody();
+  $("banner").style.setProperty("--state-c","var(--track-line)");$("btn-resume").style.display="none";
+  ["m-z","m-dz","m-d2","m-th","m-conf","m-px"].forEach(i=>$(i).textContent="—");
+  $("dur-meta").textContent="stable 0 ms";
+  renderPatientBanner();paintStateIdle();
+  $("view-worklist").classList.add("hidden");$("view-study").classList.remove("hidden");
+  renderLUT();setupCanvas();setControls();
+}
+function renderPatientBanner(){
+  const p=currentPatient;if(!p)return;
+  $("pb-name").innerHTML=`<b>${L(p.name)}</b> · ${p.sex}/${p.age}`;
+  $("pb-meta").textContent=`${p.pid} · ${p.acc} · ${p.modality} CHEST PA · ${p.time}`;
+  $("pb-desc").textContent=L(p.desc);$("pb-mode").textContent=t("mode_"+p.mode);
+  $("pb-th").textContent=p.base+" mm";$("pb-dept").textContent=L(p.dept);
+  $("ctl-mode").textContent=t("mode_"+p.mode)+(p.mode!=="adult"?t("mode_auto"):"");
+  $("rec-region").textContent="chest_pa · "+p.mode;
+}
+function paintStateIdle(){
+  $("state-name").textContent=t("state_idle");$("state-sub").textContent=t("sub_default");
+}
+function resetRecBody(){
+  $("rec-body").innerHTML=`<div class="rec-grid">
+    <div class="dose"><div class="k">kVp</div><div class="v empty">—</div><div class="u">${t("dose_kvp")}</div></div>
+    <div class="dose"><div class="k">mAs</div><div class="v empty">—</div><div class="u">${t("dose_mas")}</div></div>
+    <div class="rec-action"><div class="rec-status" id="rec-status">${t("rec_default")}</div>
+      <button class="btn approve" id="btn-approve" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg> ${t("rec_approve")}</button></div></div>
+    <div class="rec-foot"><span><b>${t("rec_src")}</b> lut_v${LUT.version}</span><span><b>${t("rec_guard")}</b> kVp 60–120 · mAs 1–80</span><span><b>model_hash</b> <span id="rec-hash">sha256:…</span></span></div>`;
+}
+function backToWorklist(){
+  if(running)stopSession();
+  $("view-study").classList.add("hidden");$("view-worklist").classList.remove("hidden");
+  renderWorklist();
+}
+
+/* ===== live pipeline: WebSocket message handlers =====
+   Each backend WS message is adapted into the same render calls the console
+   used for its simulation, so every renderer below is reused unchanged. */
+function onWsMessage(raw){
+  let msg;try{msg=JSON.parse(raw);}catch(_){return;}
+  if(!msg||typeof msg!=="object")return;
+  if(msg.session_id)sessionId=msg.session_id;
+  try{
+    switch(msg.type){
+      case "depth.summary":onDepth(msg);break;
+      case "respiration.state":onResp(msg);break;
+      case "exposure.recommendation":onRec(msg);break;
+      case "system.error":onSysErr(msg);break;
+    }
+  }catch(e){if(window.console)console.warn("ws handler",e);}
+}
+function onDepth(msg){
+  const m=msg.measurement||{},q=msg.quality||{};
+  if(m.mean_depth_mm!=null)lastDepth.z=m.mean_depth_mm;
+  if(m.estimated_thickness_mm!=null)lastDepth.th=m.estimated_thickness_mm;
+  if(q.confidence!=null)lastDepth.conf=q.confidence;
+  if(m.valid_pixel_ratio!=null)lastDepth.px=m.valid_pixel_ratio;
+  evCount++;
+  if(evCount%6===0)pushEvent("depth","depth.summary",`z=${(lastDepth.z||0).toFixed(1)}mm conf=${(lastDepth.conf||0).toFixed(2)} px=${(lastDepth.px||0).toFixed(2)}`);
+}
+function onResp(msg){
+  const s=msg.signal||{},g=msg.gating||{},q=msg.quality||{};
+  gating.state=msg.state;
+  const r={state:msg.state,
+    z:(s.z_mm!=null?s.z_mm:(lastDepth.z!=null?lastDepth.z:baseTh())),
+    th:(lastDepth.th!=null?lastDepth.th:(s.z_mm!=null?s.z_mm:baseTh())),
+    dz:s.dz_dt_mm_s||0,d2:s.d2z_dt2_mm_s2||0,dur:s.stable_duration_ms||0,
+    ready:!!g.ready_to_capture,reason:g.reason||null,abort:!!g.abort};
+  lastR=r;
+  if(safe)return;                       // frozen while in safe state
+  pushWave(r);
+  updateSignal(r,(lastDepth.conf!=null?lastDepth.conf:(q.confidence||0)),(lastDepth.px!=null?lastDepth.px:0));
+  paintState(r);highlightLUT(r.th);
+  evCount++;
+  if(evCount%4===0)pushEvent("resp","respiration.state",`state=${r.state} dz=${r.dz.toFixed(2)} d2=${r.d2.toFixed(1)}`);
+  if(r.state!=="stable_breath_hold"&&lastReadyRec){lastReadyRec=null;_recSig=null;closeRec(r.state);}
+}
+function onRec(msg){
+  if(safe)return;
+  const g=msg.guardrails||{},rc=msg.recommendation||{},inp=msg.input||{};
+  const th=(inp.estimated_thickness_mm!=null?inp.estimated_thickness_mm:(lastDepth.th!=null?lastDepth.th:baseTh()));
+  const rec=g.manual_review_required
+    ? {manual:true,kvp:null,mas:null}
+    : {manual:false,kvp:rc.kvp,mas:rc.mas,within:!!g.within_min_max};
+  lastRecommendationId=msg.recommendation_id||lastRecommendationId;
+  const sig=rec.manual?"manual":`${rec.kvp}/${rec.mas}`;
+  lastReadyRec=rec;
+  if(sig===_recSig)return;              // backend re-emits every frame while held — de-dupe
+  _recSig=sig;approved=false;
+  showRec(rec,th);
+  pushEvent("expo","exposure.recommendation",rec.manual?`mode=${inp.patient_mode||mode} manual_review`:`kVp=${rec.kvp} mAs=${rec.mas} within=${rec.within}`);
+  fetchAudit();
+}
+function onSysErr(msg){
+  const code=msg.code||"UNKNOWN";
+  if(msg.safe_state_entered){
+    safe=true;faultKind=code;
+    $("console").classList.add("safe");$("banner").style.setProperty("--state-c","var(--danger)");
+    $("state-name").textContent=t("state_safe");
+    $("state-sub").textContent=t("sub_safe",msg.message||code);
+    $("cam-state").textContent=t("cam_fault",code);
+    $("dev-status").classList.remove("on");$("dev-status").classList.add("err");$("dev-status-t").textContent=t("conn_err");
+    $("btn-resume").style.display="flex";setControls();
+  }
+  pushEvent("err","system.error",code+(msg.message?" · "+msg.message:""));
+}
+
+/* ===== WebSocket with exponential-backoff reconnect ===== */
+function setConn(ok){
+  const ds=$("dev-status");if(!ds)return;
+  if(ok){if(!safe){ds.classList.remove("err");ds.classList.add("on");$("dev-status-t").textContent=t("conn_on");}}
+  else{ds.classList.remove("on");if(!safe)$("dev-status-t").textContent=t("conn_wait");}
+}
+function connectWs(){
+  try{if(ws){ws.onopen=ws.onclose=ws.onerror=ws.onmessage=null;ws.close();}}catch(_){}
+  try{ws=new WebSocket(wsUrl());}catch(_){scheduleReconnect();return;}
+  ws.onopen=()=>{wsBackoff=500;setConn(true);
+    if(wsPing)clearInterval(wsPing);
+    wsPing=setInterval(()=>{try{if(ws&&ws.readyState===1)ws.send("ping");}catch(_){}} ,15000);};
+  ws.onmessage=ev=>onWsMessage(ev.data);
+  ws.onerror=()=>{};
+  ws.onclose=()=>{if(wsPing){clearInterval(wsPing);wsPing=null;}if(connected)scheduleReconnect();};
+}
+function scheduleReconnect(){setConn(false);if(wsReconnect)clearTimeout(wsReconnect);
+  wsReconnect=setTimeout(()=>{if(connected)connectWs();},wsBackoff);wsBackoff=Math.min(wsBackoff*2,10000);}
+function disconnectWs(){connected=false;
+  if(wsReconnect){clearTimeout(wsReconnect);wsReconnect=null;}
+  if(wsPing){clearInterval(wsPing);wsPing=null;}
+  try{if(ws){ws.onopen=ws.onclose=ws.onerror=ws.onmessage=null;ws.close();}}catch(_){}ws=null;}
+
+/* ===== audit panel (real server hash chain) ===== */
+function startPollers(){fetchAudit();if(_auditTimer)clearInterval(_auditTimer);_auditTimer=setInterval(fetchAudit,2500);}
+function stopPollers(){if(_auditTimer){clearInterval(_auditTimer);_auditTimer=null;}}
+function fetchAudit(){apiGet("/api/v1/audit?limit=60").then(d=>{lastAuditEntries=d.entries||[];auditCount=lastAuditEntries.length;renderAudit(lastAuditEntries);setControls();}).catch(()=>{});}
+function fmtTs(ms){try{return new Date(ms).toTimeString().slice(0,8);}catch(_){return "—";}}
+function mapSev(s){return s==="error"?"abort":s==="warning"||s==="warn"?"warn":"info";}
+function renderAudit(entries){
+  const log=$("log");if(!log)return;
+  if(!entries||!entries.length){log.innerHTML=`<div class="empty">${t("aud_empty")}</div>`;return;}
+  log.innerHTML=entries.map(e=>{
+    const hash=(e.event_hash||"").replace("sha256:","");
+    return `<div class="log-row" data-sev="${mapSev(e.severity)}" data-type="${e.type}">
+      <span class="seq num">#${String(e.seq).padStart(2,"0")}</span>
+      <span class="ts">${fmtTs(e.timestamp_ms)}</span>
+      <span class="ty">${prettyTypeLive(e)}</span>
+      <span class="hash">${hash.slice(0,8)}…</span></div>`;
+  }).join("");
+}
+function prettyTypeLive(e){
+  const p=e.payload||{};
+  switch(e.type){
+    case "session_started":return t("lt_session_started",p.session_id||"");
+    case "session_ended":return t("lt_session_ended");
+    case "recommendation_generated":{
+      const g=p.guardrails||{},rc=p.recommendation||{};
+      return g.manual_review_required?t("lt_manual_req"):t("lt_rec",rc.kvp,rc.mas);}
+    case "approve_recommendation":return t("rec_approved");
+    case "play_breath_cue":return t("lt_cue");
+    case "switch_manual_mode":return t("lt_manual");
+    case "trigger_cough":return I18N[lang].reason_cough;
+    case "abort":return t("lt_abort",e.category==="operator_action"?"operator":reasonText(p.reason));
+    default:return e.type;
+  }
+}
+
+/* ===== render ===== */
+function reasonText(code){return code?(I18N[lang][code]!==undefined?t(code):code):"";}
+function paintState(r){
+  $("banner").style.setProperty("--state-c",`var(${STATE_COLOR[r.state]||"--track-line"})`);
+  if(safe){$("state-name").textContent=t("state_safe");return;}
+  $("state-name").textContent=t("state_"+r.state);
+  let s="";
+  switch(r.state){
+    case "tracking":s=t("sub_tracking");break;
+    case "cue_requested":s=t("sub_cue",Math.round(r.dur||0),GATING.min_stable_ms);break;
+    case "stable_breath_hold":s=t("sub_stable",Math.round(r.dur||0));break;
+    case "unstable":s=t("sub_unstable");break;
+    case "abort":s=t("sub_abort");break;
+    case "timeout":s=t("sub_timeout");break;
+    case "manual_mode":s=t("sub_manual");break;
+    default:s=t("sub_default");
+  }
+  $("state-sub").textContent=s;
+}
+function updateSignal(r,conf,px){
+  $("m-z").textContent=fmt(r.z,1);$("m-dz").textContent=fmt(r.dz,2);$("m-d2").textContent=fmt(r.d2,1);
+  $("m-th").textContent=Math.round(r.th!=null?r.th:r.z);$("m-conf").textContent=conf.toFixed(2);$("m-px").textContent=px.toFixed(2);
+  $("dur-meta").textContent="stable "+Math.round(r.dur||0)+" ms";
+  $("m-d2-cell").classList.toggle("flag",Math.abs(r.d2)>GATING.cough_d2z);
+  $("m-px-cell").classList.toggle("flag",px<=GATING.min_valid_px);
+}
+async function showRec(rec,th){
+  const card=$("rec-card");card.classList.remove("disabled");
+  const body=$("rec-body");
+  if(rec.manual){
+    body.innerHTML=`<div class="notice"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+      <div><div class="t">${t("manual_title")} (${t("mode_"+mode)})</div><div class="d">${t("manual_msg")} ${t("manual_detail",Math.round(th))}</div></div></div>`;
+    return;
+  }
+  const msg=rec.within?t("rec_msg_within"):t("rec_msg_clamp");
+  body.innerHTML=`<div class="rec-grid">
+    <div class="dose"><div class="k">kVp</div><div class="v">${rec.kvp}</div><div class="u">${t("dose_kvp")}</div></div>
+    <div class="dose"><div class="k">mAs</div><div class="v">${rec.mas.toFixed(1)}</div><div class="u">${t("dose_mas")}</div></div>
+    <div class="rec-action"><div><span class="pill ${rec.within?'ok':'warn'}">${rec.within?t("rec_within"):t("rec_clamped")}</span>
+      <div class="rec-status" id="rec-status" style="margin-top:9px">${approved?'':msg}</div></div>
+      <button class="btn approve" id="btn-approve"${approved?' disabled':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg> ${approved?t("rec_approved"):t("rec_approve")}</button></div></div>
+    <div class="rec-foot"><span><b>${t("rec_src")}</b> lut_v${LUT.version}</span><span><b>${t("rec_th")}</b> ${Math.round(th)} mm → ${t("mode_"+mode)}</span><span><b>${t("rec_guard")}</b> kVp 60–120 · mAs 1–80</span></div>`;
+  if(approved){const st=$("rec-status");if(st)st.innerHTML=`<span class="pill ok">${t("rec_approve_pill")}</span> ${t("rec_approve_note")}`;}
+  else $("btn-approve").addEventListener("click",approveRec);
+}
+function closeRec(state){
+  const card=$("rec-card");if(state==="abort"||state==="timeout"||state==="manual_mode")card.classList.add("disabled");
+  const st=$("rec-status");if(st&&!approved)st.textContent=t("rec_closed");
+  const ab=$("btn-approve");if(ab)ab.disabled=true;
+}
+async function approveRec(){
+  if(!lastReadyRec||lastReadyRec.manual||approved||!lastRecommendationId||!sessionId)return;
+  try{await apiPost("/api/v1/operator/approve",{session_id:sessionId,recommendation_id:lastRecommendationId,operator_id:OPERATOR_ID});}
+  catch(_){return;}
+  approved=true;
+  const ab=$("btn-approve");if(ab){ab.disabled=true;ab.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg> ${t("rec_approved")}`;}
+  const st=$("rec-status");if(st)st.innerHTML=`<span class="pill ok">${t("rec_approve_pill")}</span> ${t("rec_approve_note")}`;
+  pushEvent("expo","operator.approve",`kVp=${lastReadyRec.kvp} mAs=${lastReadyRec.mas}`);
+  if(currentPatient&&currentPatient.status!=="done"){currentPatient.status="done";updateRowStatus(currentPatient);}
+  fetchAudit();
+}
+function renderLUT(){
+  const order=["adult","pediatric","bariatric"];let html="";
+  for(const key of order)for(const r of LUT.chest_pa[key]){
+    const manual=r.note==="pending clinical review";
+    html+=`<tr data-mode="${key}" data-min="${r.min}" data-max="${r.max}"><td class="n">${r.min}–${r.max}</td><td>${t("mode_"+key)}</td>
+      <td class="n">${manual?"—":r.kvp}</td><td class="n">${manual?"—":r.mas.toFixed(1)}</td><td>${manual?`<span class="tag">${t("lut_tag")}</span>`:t("lut_can")}</td></tr>`;
+  }
+  $("lut-body").innerHTML=html;
+}
+function highlightLUT(th){
+  $("lut-body").querySelectorAll("tr").forEach(tr=>{tr.classList.toggle("active",running&&tr.dataset.mode===mode&&th>=+tr.dataset.min&&th<=+tr.dataset.max);});
+}
+function pushEvent(kind,topic,body){
+  const box=$("events");const e=box.querySelector(".empty");if(e)e.remove();
+  const cls={resp:"resp",expo:"expo",err:"err",depth:""}[kind]||"";
+  const row=document.createElement("div");row.className="ev";
+  row.innerHTML=`<span class="tp ${cls}">${topic.split(".")[1]||topic}</span><span class="body">${body}</span><span class="t">${clockMs().slice(0,8)}</span>`;
+  box.insertBefore(row,box.firstChild);while(box.children.length>40)box.removeChild(box.lastChild);
+}
+function renderLog(e){
+  const log=$("log");const em=log.querySelector(".empty");if(em)em.remove();
+  const row=document.createElement("div");row.className="log-row";row.dataset.sev=e.sev;row.dataset.type=e.type;
+  row.innerHTML=`<span class="seq num">#${String(e.seq).padStart(2,"0")}</span><span class="ts">${e.ts.slice(0,8)}</span><span class="ty">${prettyType(e)}</span><span class="hash">${e.hash.slice(0,8)}…</span>`;
+  log.insertBefore(row,log.firstChild);
+}
+function prettyType(e){
+  const p=e.payload||{};
+  switch(e.type){
+    case "session_started":return t("lt_session_started",p.patient||"");
+    case "session_ended":return t("lt_session_ended");
+    case "device_connected":return t("lt_device_connected",p.provider||"");
+    case "device_disconnected":return t("lt_device_disconnected");
+    case "calibration_ok":return t("lt_calibration_ok",p.drift);
+    case "tracking":return t("lt_tracking");case "cue_requested":return t("lt_cue");
+    case "recommendation_issued":return t("lt_rec",p.kvp,p.mas);
+    case "manual_review_required":return t("lt_manual_req");
+    case "operator_approved":return t("lt_approved",p.kvp,p.mas);
+    case "study_completed":return t("lt_completed",p.acc);
+    case "abort":return t("lt_abort",reasonText(p.reason));case "timeout":return t("lt_timeout");
+    case "unstable":return t("lt_unstable");case "manual_mode":return t("lt_manual");
+    case "fault":return t("lt_fault",reasonText("rsn_"+(p.kind||"")));case "safe_resume":return t("lt_resume");
+    default:return e.type;
+  }
+}
+
+/* ===== waveform ===== */
+const cv=$("wave"),ctx=cv.getContext("2d");let waveBuf=[];const WAVE_LEN=260;
+function setupCanvas(){const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);drawWave();}
+function pushWave(r){waveBuf.push({z:r.z,state:r.state});if(waveBuf.length>WAVE_LEN)waveBuf.shift();drawWave();}
+function cssvar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function stateColorVar(s){if(s==="stable_breath_hold")return"--success";if(s==="abort")return"--danger";if(s==="unstable"||s==="timeout")return"--warn";return"--track-line";}
+function drawWave(){
+  const w=cv.clientWidth,h=cv.clientHeight;if(!w)return;ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle=cssvar("--border-soft");ctx.lineWidth=1;
+  for(let i=1;i<5;i++){const y=h*i/5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  if(waveBuf.length<2){ctx.fillStyle=cssvar("--meta");ctx.font="13px "+cssvar("--font-mono");ctx.fillText(t("lg_z")+" — —",16,h/2);return;}
+  // centre the Y-axis on the live signal's own midpoint: the backend reports
+  // absolute surface depth (camera distance, ~800mm), not the patient's baseline
+  // thickness, so a fixed baseTh() centre would push the trace off-canvas.
+  const zs=waveBuf.map(p=>p.z),mid=zs.reduce((a,b)=>a+b,0)/zs.length;
+  const span=Math.max(14,Math.max(...zs)-Math.min(...zs)),lo=mid-span*0.9,hi=mid+span*0.9;
+  const X=i=>i/(WAVE_LEN-1)*w,Y=z=>h-(z-lo)/(hi-lo)*h,off=WAVE_LEN-waveBuf.length,cellW=w/(WAVE_LEN-1);
+  for(let i=0;i<waveBuf.length;i++)if(waveBuf[i].state==="stable_breath_hold"){ctx.fillStyle="rgba(0,215,34,0.10)";ctx.fillRect(X(off+i)-cellW/2,0,cellW+1,h);}
+  for(let i=1;i<waveBuf.length;i++){const p0=waveBuf[i-1],p1=waveBuf[i];
+    ctx.beginPath();ctx.moveTo(X(off+i-1),Y(p0.z));ctx.lineTo(X(off+i),Y(p1.z));
+    ctx.strokeStyle=cssvar(stateColorVar(p1.state));ctx.lineWidth=2.2;ctx.lineJoin="round";ctx.stroke();}
+  const last=waveBuf[waveBuf.length-1];
+  ctx.beginPath();ctx.arc(X(WAVE_LEN-1),Y(last.z),3.4,0,Math.PI*2);ctx.fillStyle=cssvar(stateColorVar(last.state));ctx.fill();
+  $("wave-flag").textContent="z(t) · "+last.z.toFixed(1)+" mm";
+}
+
+/* ===== controls ===== */
+function svgIcon(d){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${d}</svg>`;}
+function setControls(){
+  const sessionable=connected&&calibrated&&currentPatient;
+  $("btn-session").disabled=!sessionable;
+  const on=running&&!safe;
+  $("btn-cue").disabled=!on;$("btn-cough").disabled=!on;$("btn-abort").disabled=!on;$("btn-manual").disabled=!running;
+  $("btn-verify").disabled=!connected;
+  $("btn-calib").disabled=!connected||running;
+  $("provider").disabled=connected;
+  // fault-injection + signal-source sliders are simulation-only: the live mock
+  // camera is driven by the backend, so they have no live equivalent.
+  document.querySelectorAll("[data-fault]").forEach(b=>b.disabled=true);
+  ["sl-period","sl-amp"].forEach(id=>{const el=$(id);if(el)el.disabled=true;});
+}
+function updateDynLabels(){
+  $("connect-lbl").textContent=connected?t("disconnect"):t("connect");
+  $("session-lbl").textContent=running?t("session_stop"):t("session_start");
+  $("manual-lbl").textContent=(gating.state==="manual_mode")?t("resume_track"):t("manual_btn");
+}
+function setCamStatus(txt,cls){const el=$("set-cam-status");if(el){el.textContent=txt;el.className="set-status"+(cls?(" "+cls):"");}}
+/* Ask the gateway which camera providers this host can actually use, and reflect
+   real availability (RealSense needs the SDK + an attached device) in the select. */
+function loadDevices(){
+  apiGet("/api/v1/devices").then(d=>{
+    const sel=$("provider");if(!sel)return;
+    const active=d.active||{};
+    let html="";
+    (d.providers||[]).forEach(p=>{
+      if(p.available&&p.devices&&p.devices.length){
+        p.devices.forEach(dev=>{
+          html+=`<option value="${p.id}|${dev.serial}">${dev.model} · ${dev.serial} — ${p.label}</option>`;
+        });
+      }else{
+        html+=`<option value="${p.id}|" disabled>${p.label} — ${p.detail||"unavailable"}</option>`;
+      }
+    });
+    sel.innerHTML=html;
+    const want=active.provider?active.provider+"|"+(active.serial||""):"";
+    let matched=false;
+    [...sel.options].forEach(o=>{if(o.value===want&&!o.disabled){sel.value=o.value;matched=true;}});
+    if(!matched){const first=[...sel.options].find(o=>!o.disabled);if(first)sel.value=first.value;}
+  }).catch(()=>{});
+}
+async function connectDevice(){
+  if(connected){disconnectDevice();return;}
+  const raw=$("provider").value||"mock|";
+  const bar=raw.indexOf("|");
+  provider=bar>=0?raw.slice(0,bar):raw;
+  const serial=bar>=0?raw.slice(bar+1):"auto";
+  const btn=$("btn-connect");btn.disabled=true;
+  setCamStatus(t("set_connecting"),"");
+  let r;
+  try{r=await apiPost("/api/v1/devices/connect",{provider,serial:serial||"auto"});}
+  catch(e){btn.disabled=false;setCamStatus(t("set_conn_fail")+" · "+e.message,"bad");return;}
+  btn.disabled=false;
+  if(!r||r.status!=="connected"){setCamStatus((r&&r.detail)||t("set_conn_fail"),"bad");return;}
+  const dev=r.device||{};
+  connected=true;calibrated=false;driftMm=null;
+  const ds=$("dev-status");ds.classList.remove("err");ds.classList.add("on");
+  $("dev-status-t").textContent=t("conn_on");
+  $("cam-state").textContent=dev.vendor==="mock"?t("cam_mock"):(dev.model||provider);$("cam-chip").classList.add("live");
+  $("btn-connect").classList.remove("primary");
+  $("calib-t").textContent=t("calib_need");updateDynLabels();
+  connectWs();startPollers();setControls();
+  setCamStatus(t("set_conn_ok")+(dev.model?" · "+dev.model:"")+(dev.usb_speed?" · "+dev.usb_speed:""),"ok");
+  if(!$("view-settings").classList.contains("hidden"))setTimeout(probeServer,300);
+}
+async function disconnectDevice(){
+  if(running)await stopSession();
+  try{await apiPost("/api/v1/devices/disconnect",{});}catch(_){}
+  disconnectWs();stopPollers();
+  connected=false;calibrated=false;driftMm=null;
+  $("dev-status").classList.remove("on","err");$("dev-status-t").textContent=t("conn_wait");
+  $("cam-state").textContent=t("cam_disconnected");$("cam-chip").classList.remove("live");
+  $("btn-connect").classList.add("primary");
+  $("calib-bar").style.width="0";$("calib-t").textContent=t("calib_none");
+  setCamStatus("—","");updateDynLabels();setControls();
+  if(!$("view-settings").classList.contains("hidden"))probeServer();
+}
+/* Empty-bed calibration (GTS-002) is an offline procedure with no live REST
+   endpoint; this is a local readiness gate before a session may start. */
+function runCalibration(){
+  if(!connected||running)return;$("btn-calib").disabled=true;$("calib-t").textContent=t("calib_running");
+  let p=0;const iv=setInterval(()=>{p+=0.08;$("calib-bar").style.width=Math.min(p,1)*100+"%";
+    if(p>=1){clearInterval(iv);calibrated=true;driftMm=(0.2+Math.random()*0.3).toFixed(2);
+      $("calib-t").innerHTML=`<span style="color:var(--ready-ink);font-weight:600">OK · drift ${driftMm}mm</span>`;
+      setControls();if(!$("view-settings").classList.contains("hidden"))probeServer();}},70);
+}
+async function startSession(){
+  if(!connected||!calibrated||!currentPatient)return;
+  try{const r=await apiPost("/api/v1/sessions",{body_region:"chest_pa",patient_mode:currentPatient.mode});
+    if(r&&r.session_id)sessionId=r.session_id;}
+  catch(e){pushEvent("err","system.error","session start failed · "+e.message);return;}
+  running=true;safe=false;lastReadyRec=null;lastRecommendationId=null;approved=false;_recSig=null;evCount=0;
+  gating={state:"tracking"};
+  if(currentPatient.status!=="done"){currentPatient.status="prog";updateRowStatus(currentPatient);}
+  $("btn-session").classList.remove("primary");
+  $("console").classList.remove("safe");$("rec-card").classList.add("disabled");
+  updateDynLabels();setControls();fetchAudit();
+}
+async function stopSession(){
+  running=false;
+  if(sessionId)await sendAction("abort");        // reset backend gating
+  $("btn-session").classList.add("primary");
+  $("state-name").textContent=t("state_idle");$("state-sub").textContent=t("sub_ended");$("banner").style.setProperty("--state-c","var(--track-line)");
+  if(currentPatient&&currentPatient.status==="prog"){currentPatient.status="waiting";updateRowStatus(currentPatient);}
+  lastReadyRec=null;_recSig=null;highlightLUT(-1);updateDynLabels();setControls();
+}
+function playCue(){if(!running||safe)return;sendAction("play_breath_cue");}
+function triggerCough(){if(!running||safe)return;sendAction("trigger_cough");}
+function doAbort(){if(!running||safe)return;lastReadyRec=null;_recSig=null;closeRec("abort");sendAction("abort");}
+async function toggleManual(){
+  if(!running)return;
+  if(gating.state==="manual_mode"){
+    // resume: reset gating then re-arm tracking via a fresh session start_tracking
+    await sendAction("abort");
+    try{await apiPost("/api/v1/sessions",{body_region:"chest_pa",patient_mode:currentPatient?currentPatient.mode:"adult"});}catch(_){}
+    gating.state="tracking";
+  }else{
+    lastReadyRec=null;_recSig=null;closeRec("manual_mode");
+    await sendAction("switch_manual_mode");gating.state="manual_mode";
+  }
+  updateDynLabels();
+}
+/* simulation-only in the live build — the backend mock camera has no
+   disconnect/drift/low-confidence injection hook. Kept as a no-op. */
+function injectFault(){/* disabled in live mode */}
+async function resumeFromFault(){
+  safe=false;faultKind=null;
+  $("console").classList.remove("safe");$("btn-resume").style.display="none";
+  $("cam-state").textContent=t("cam_mock");
+  $("dev-status").classList.remove("err");$("dev-status").classList.add("on");$("dev-status-t").textContent=t("conn_on");
+  lastReadyRec=null;_recSig=null;
+  // backend auto-clears safe state on the next good frame; re-arm tracking
+  try{if(sessionId)await apiPost("/api/v1/sessions",{body_region:"chest_pa",patient_mode:currentPatient?currentPatient.mode:"adult"});}catch(_){}
+  gating.state="tracking";setControls();
+}
+async function verifyChain(){
+  const out=$("verify-out");out.textContent=t("verify_run");out.className="verify-out";out.style.color="";
+  try{
+    const r=await apiGet("/api/v1/audit/verify");
+    if(r.ok){out.textContent=t("verify_ok",r.count);out.className="verify-out ok";}
+    else{out.textContent=t("verify_bad",r.count||0);out.className="verify-out";out.style.color="var(--danger)";}
+  }catch(e){out.textContent="✗ "+e.message;out.className="verify-out";out.style.color="var(--danger)";}
+}
+
+/* ===== settings ===== */
+let _prevView="view-worklist";
+function openSettings(){
+  if(!$("view-settings").classList.contains("hidden"))return;
+  _prevView=!$("view-study").classList.contains("hidden")?"view-study":"view-worklist";
+  $("view-worklist").classList.add("hidden");$("view-study").classList.add("hidden");
+  $("view-settings").classList.remove("hidden");
+  $("set-origin").value=API_ORIGIN;
+  loadDevices();probeServer();
+}
+function closeSettings(){
+  if($("view-settings").classList.contains("hidden"))return;
+  $("view-settings").classList.add("hidden");
+  $(_prevView).classList.remove("hidden");
+  if(_prevView==="view-study")setupCanvas();
+}
+function kvRows(rows){return rows.map(r=>{
+  const cls=r[2]?` class="${r[2]}"`:"";
+  return `<div class="row"><span>${r[0]}</span><b${cls}>${r[1]}</b></div>`;}).join("");}
+function probeServer(){
+  const st=$("set-server-status");if(st){st.textContent=t("set_testing");st.className="set-status";}
+  Promise.all([
+    apiGet("/api/v1/health").catch(()=>null),
+    apiGet("/api/v1/state").catch(()=>null)
+  ]).then(([h,s])=>renderServerInfo(h,s));
+}
+function renderServerInfo(h,s){
+  const st=$("set-server-status");
+  if(!h){if(st){st.textContent=t("set_conn_fail");st.className="set-status bad";}
+    $("set-health").innerHTML="";
+    $("set-device").innerHTML=`<div class="empty">${t("set_offline")}</div>`;
+    const cs=$("set-cam-status");if(cs){cs.textContent="—";cs.className="set-status";}
+    return;}
+  if(st){st.textContent=t("set_conn_ok")+" · "+(API_ORIGIN||location.host);st.className="set-status ok";}
+  const okv=v=>v==="ok"||v==="connected"||v==="valid"?"on":(v==="down"?"off":"");
+  const svc=Object.entries(h.services||{}).map(([k,v])=>[k,v,okv(v)]);
+  $("set-health").innerHTML=kvRows([
+    [t("set_status"),h.status,h.status==="ok"?"on":"off"],
+    [t("set_uptime"),(h.uptime_s||0)+" s"],
+    ...svc
+  ]);
+  $("set-device").innerHTML=kvRows([
+    [t("set_device_id"),h.device_id||"—"],
+    [t("set_mode"),s?s.mode:"—"],
+    [t("set_camera_state"),s?s.camera:"—",s?okv(s.camera):""],
+    [t("set_calib_state"),s?s.calibration:"—",s?okv(s.calibration):""],
+    [t("set_session"),s&&s.session_id?s.session_id:"—"]
+  ]);
+  const cs=$("set-cam-status");
+  if(cs){const on=s&&s.camera==="connected";cs.textContent=on?t("set_conn_ok"):t("cam_disconnected");cs.className="set-status "+(on?"ok":"");}
+}
+function testAndSave(){
+  let v=$("set-origin").value.trim().replace(/\/+$/,"");
+  API_ORIGIN=v;
+  try{localStorage.setItem("aera:origin",v);}catch(_){}
+  if(connected){connectWs();startPollers();}   // re-point live streams at the new origin
+  probeServer();
+}
+
+/* ===== language ===== */
+function applyLang(){
+  document.documentElement.lang=lang;document.title=t("title");
+  document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=t(el.dataset.i18n);});
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{el.innerHTML=t(el.dataset.i18nHtml);});
+  document.querySelectorAll("[data-i18n-title]").forEach(el=>{el.title=t(el.dataset.i18nTitle);});
+  document.querySelectorAll("#lang-toggle button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===lang));
+  if(!$("view-settings").classList.contains("hidden"))probeServer();
+  // device status dynamic
+  if(connected){$("dev-status-t").textContent=safe?t("conn_err"):t("conn_on");
+    $("cam-state").textContent=safe?t("cam_fault",faultKind||""):t("cam_mock");
+    if(!calibrated)$("calib-t").textContent=t("calib_need");}
+  else{$("cam-state").textContent=t("cam_disconnected");}
+  updateDynLabels();
+  renderWorklist();
+  if(!$("view-study").classList.contains("hidden")){
+    renderPatientBanner();renderLUT();
+    if(lastR&&running)paintState(lastR);else if(safe){$("state-name").textContent=t("state_safe");}else{paintStateIdle();}
+    if(lastReadyRec)showRec(lastReadyRec,lastR?(lastR.th!=null?lastR.th:lastR.z):baseTh());
+    else resetRecBody();
+    // re-render audit rows in the new language
+    renderAudit(lastAuditEntries);
+  }
+  try{localStorage.setItem("aera:lang",lang);}catch(_){}
+}
+function setLang(l){if(l!==lang){lang=l;applyLang();}}
+
+/* ===== bindings ===== */
+$("wl-body").addEventListener("click",e=>{const tr=e.target.closest("tr[data-acc]");if(tr)openStudy(tr.dataset.acc);});
+document.querySelectorAll(".wl thead th[data-sort]").forEach(th=>th.addEventListener("click",()=>{
+  const k=th.dataset.sort;if(wlSort===k)wlDir*=-1;else{wlSort=k;wlDir=1;}renderWorklist();}));
+$("wl-search").addEventListener("input",e=>{wlSearch=e.target.value;renderWorklist();});
+$("f-modality").addEventListener("change",e=>{wlMod=e.target.value;renderWorklist();});
+$("f-status").addEventListener("change",e=>{wlStatus=e.target.value;renderWorklist();});
+document.querySelectorAll("#lang-toggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.lang)));
+$("btn-back").addEventListener("click",backToWorklist);
+$("btn-connect").addEventListener("click",connectDevice);
+$("btn-calib").addEventListener("click",runCalibration);
+$("btn-session").addEventListener("click",()=>running?stopSession():startSession());
+$("btn-cue").addEventListener("click",playCue);
+$("btn-cough").addEventListener("click",triggerCough);
+$("btn-abort").addEventListener("click",doAbort);
+$("btn-manual").addEventListener("click",toggleManual);
+$("btn-resume").addEventListener("click",resumeFromFault);
+$("btn-verify").addEventListener("click",verifyChain);
+$("btn-settings").addEventListener("click",openSettings);
+$("btn-settings-back").addEventListener("click",closeSettings);
+$("btn-set-test").addEventListener("click",testAndSave);
+$("set-origin").addEventListener("keydown",e=>{if(e.key==="Enter")testAndSave();else if(e.key==="Escape")closeSettings();});
+document.querySelectorAll("[data-fault]").forEach(b=>b.addEventListener("click",()=>injectFault(b.dataset.fault)));
+$("sl-period").addEventListener("input",e=>{sim.period=+e.target.value;$("v-period").textContent=sim.period+" ms";});
+$("sl-amp").addEventListener("input",e=>{sim.amp=+e.target.value;$("v-amp").textContent=(+e.target.value).toFixed(1)+" mm";});
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT")return;
+  if(e.key==="Escape"&&!$("view-settings").classList.contains("hidden")){closeSettings();return;}
+  const studyOpen=!$("view-study").classList.contains("hidden");
+  if(e.key==="Escape"&&studyOpen){backToWorklist();return;}
+  if(!studyOpen)return;
+  const k=e.key.toLowerCase();
+  if(k==="s"){if(!$("btn-session").disabled)(running?stopSession():startSession());}
+  else if(k==="b"&&!$("btn-cue").disabled)playCue();
+  else if(k==="c"&&!$("btn-cough").disabled)triggerCough();
+  else if(k==="a"){const a=$("btn-approve");if(a&&!a.disabled)approveRec();}
+});
+
+/* ===== boot ===== */
+setInterval(()=>{$("clock").textContent=new Date().toTimeString().slice(0,8);},1000);
+$("clock").textContent=new Date().toTimeString().slice(0,8);
+window.addEventListener("resize",setupCanvas);
+applyLang();renderLUT();setupCanvas();setControls();
+</script>
+</body>
+</html>

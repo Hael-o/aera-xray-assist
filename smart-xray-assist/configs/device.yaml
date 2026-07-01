@@ -1,0 +1,11 @@
+device:
+  id: edge-001
+  site_id: hospital-a
+  room_id: xray-room-1
+  mode: operator_assist
+  timezone: Asia/Seoul
+
+storage:
+  database_path: var/xray.db          # relative for MVP; /var/lib/xray-assist/xray.db in prod
+  log_path: var/log
+  raw_frame_storage: disabled         # never enable in production

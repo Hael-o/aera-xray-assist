@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280, height=800, initial-scale=1.0" />
+<title>Smart X-ray Assist — Operator Console</title>
+<style>
+  :root {
+    --bg: #0c1016;
+    --panel: #151b25;
+    --panel-2: #1c2533;
+    --border: #2a3647;
+    --text: #e8edf4;
+    --muted: #8a99ad;
+    --green: #1faa59;
+    --green-d: #0f5e32;
+    --amber: #d68a1a;
+    --amber-d: #7a4d08;
+    --red: #d33b3b;
+    --red-d: #7a1414;
+    --blue: #2f74d0;
+    --blue-d: #143a6b;
+    --accent: #3ea6ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1280px; height: 800px; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; user-select: none;
+  }
+  #app { display: flex; flex-direction: column; height: 800px; }
+
+  /* ---- Top bar ---- */
+  #topbar {
+    display: flex; align-items: center; gap: 22px;
+    height: 64px; padding: 0 22px;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    flex: 0 0 auto;
+  }
+  #topbar .brand { font-size: 22px; font-weight: 700; letter-spacing: 0.3px; }
+  #topbar .brand .sub { font-size: 12px; color: var(--muted); font-weight: 400; display:block; }
+  .meta { display: flex; flex-direction: column; line-height: 1.25; }
+  .meta .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .meta .v { font-size: 16px; font-weight: 600; }
+  #topbar .spacer { flex: 1 1 auto; }
+  .conn {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 16px; font-weight: 600; padding: 8px 16px;
+    border-radius: 8px; border: 1px solid var(--border); background: var(--panel-2);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--muted); }
+  .conn.ok .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .conn.bad .dot { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  .pill { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--border); }
+  .pill.good { color: var(--green); border-color: var(--green-d); }
+  .pill.bad { color: var(--red); border-color: var(--red-d); }
+
+  /* ---- Main grid ---- */
+  #main { flex: 1 1 auto; display: grid; grid-template-columns: 340px 1fr 380px; gap: 14px; padding: 14px; min-height: 0; }
+  .col { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 12px; }
+
+  label.fld { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  select, input[type="text"] {
+    width: 100%; font-size: 18px; padding: 12px 12px; color: var(--text);
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  }
+  button {
+    font-size: 18px; font-weight: 700; padding: 14px 16px; width: 100%;
+    border: none; border-radius: 10px; color: #fff; cursor: pointer;
+    background: var(--accent); margin-top: 12px;
+  }
+  button.secondary { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); }
+  button.warn { background: var(--amber-d); border: 1px solid var(--amber); }
+  button.danger { background: var(--red-d); border: 1px solid var(--red); }
+  button:active { filter: brightness(1.2); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ---- Respiration banner ---- */
+  #respBanner {
+    border-radius: 14px; padding: 22px 24px; border: 2px solid var(--border);
+    background: var(--panel-2); transition: background 0.2s, border-color 0.2s;
+  }
+  #respBanner .state-label { font-size: 44px; font-weight: 800; letter-spacing: 1px; line-height: 1.05; }
+  #respBanner .state-sub { font-size: 16px; color: rgba(255,255,255,0.85); margin-top: 4px; }
+  #respBanner.green  { background: var(--green-d); border-color: var(--green); }
+  #respBanner.amber  { background: var(--amber-d); border-color: var(--amber); }
+  #respBanner.red    { background: var(--red-d);  border-color: var(--red); }
+  #respBanner.blue   { background: var(--blue-d); border-color: var(--blue); }
+
+  .signals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .sig { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+  .sig .k { font-size: 12px; color: var(--muted); }
+  .sig .v { font-size: 26px; font-weight: 700; margin-top: 4px; }
+  .sig .u { font-size: 12px; color: var(--muted); }
+
+  .gating-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .gating-row .pill { font-size: 14px; }
+  .reason { margin-top: 10px; font-size: 14px; color: var(--muted); min-height: 18px; }
+
+  /* depth strip */
+  .depth { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .depth .sig .v { font-size: 22px; }
+
+  /* ---- Exposure card ---- */
+  #expCard .ref-notice {
+    font-size: 14px; font-weight: 700; color: #ffd97a; background: rgba(214,138,26,0.15);
+    border: 1px solid var(--amber-d); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;
+  }
+  .exp-values { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .exp-val { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; }
+  .exp-val .k { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .exp-val .v { font-size: 52px; font-weight: 800; line-height: 1; margin-top: 8px; }
+  .exp-val .u { font-size: 16px; color: var(--muted); }
+  .exp-input { font-size: 14px; color: var(--muted); margin: 14px 0 6px; }
+  .exp-input b { color: var(--text); }
+  .exp-source { font-size: 11px; color: var(--muted); word-break: break-all; margin-top: 8px; }
+  #manualReviewBox {
+    display: none; background: var(--amber-d); border: 1px solid var(--amber);
+    border-radius: 12px; padding: 20px; font-size: 18px; font-weight: 600; text-align: center;
+  }
+  .guard-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+
+  /* ---- Manual mode overlay ---- */
+  #manualOverlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(8,10,14,0.97); flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px; text-align: center;
+  }
+  #manualOverlay.show { display: flex; animation: flash 1.1s infinite; }
+  @keyframes flash {
+    0%,100% { background: rgba(122,20,20,0.97); }
+    50% { background: rgba(40,12,12,0.97); }
+  }
+  #manualOverlay .mtitle { font-size: 64px; font-weight: 900; color: #ff5a5a; letter-spacing: 2px; }
+  #manualOverlay .mmsg { font-size: 26px; margin-top: 18px; max-width: 920px; line-height: 1.4; }
+  #manualOverlay .mcode { font-size: 18px; color: var(--muted); margin-top: 20px; font-family: monospace; }
+  #manualOverlay .maction {
+    font-size: 22px; margin-top: 26px; padding: 16px 24px; max-width: 920px;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--red); border-radius: 12px;
+  }
+  #manualOverlay .ovbtns { display: flex; gap: 18px; margin-top: 34px; }
+  #manualOverlay .ovbtns button { width: 280px; font-size: 20px; }
+
+  .toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    padding: 14px 22px; border-radius: 10px; font-size: 16px; font-weight: 600;
+    opacity: 0; transition: opacity 0.25s; z-index: 200; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.err { border-color: var(--red); color: #ffb3b3; }
+  .toast.ok { border-color: var(--green); color: #aef0c6; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ================= TOP BAR ================= -->
+  <div id="topbar">
+    <div class="brand">Smart X-ray Assist<span class="sub">Operator Console — REFERENCE ASSIST ONLY</span></div>
+    <div class="meta"><span class="k">Device</span><span class="v" id="m-device">—</span></div>
+    <div class="meta"><span class="k">Session</span><span class="v" id="m-session">—</span></div>
+    <div class="meta"><span class="k">Mode</span><span class="v" id="m-mode">—</span></div>
+    <div class="meta"><span class="k">Camera</span><span class="v"><span class="pill" id="m-camera">—</span></span></div>
+    <div class="meta"><span class="k">Calibration</span><span class="v"><span class="pill" id="m-calib">—</span></span></div>
+    <div class="meta"><span class="k">Uptime</span><span class="v" id="m-uptime">—</span></div>
+    <div class="spacer"></div>
+    <div class="conn bad" id="conn"><span class="dot"></span><span id="conn-text">Connecting…</span></div>
+  </div>
+
+  <!-- ================= MAIN ================= -->
+  <div id="main">
+    <!-- LEFT: patient setup + operator -->
+    <div class="col">
+      <div class="card">
+        <h2>Patient Setup</h2>
+        <label class="fld" for="bodyRegion">Body Region</label>
+        <select id="bodyRegion">
+          <option value="chest_pa">Chest PA</option>
+          <option value="chest_lateral">Chest Lateral</option>
+          <option value="abdomen_ap">Abdomen AP</option>
+          <option value="pelvis_ap">Pelvis AP</option>
+        </select>
+        <label class="fld" for="patientMode">Patient Mode</label>
+        <select id="patientMode">
+          <option value="adult">Adult</option>
+          <option value="pediatric">Pediatric</option>
+          <option value="bariatric">Bariatric</option>
+        </select>
+        <button id="btnStart">Start Session</button>
+        <button id="btnCue" class="ok">Play Breath Cue</button>
+      </div>
+
+      <div class="card">
+        <h2>Operator</h2>
+        <label class="fld" for="operatorId">Operator ID</label>
+        <input id="operatorId" type="text" value="operator_1" autocomplete="off" />
+        <button id="btnManual" class="warn">Switch to Manual Mode</button>
+        <button id="btnAbort" class="danger">Abort</button>
+      </div>
+    </div>
+
+    <!-- CENTER: respiration -->
+    <div class="col">
+      <div class="card" style="flex:0 0 auto;">
+        <h2>Respiration State</h2>
+        <div id="respBanner">
+          <div class="state-label" id="resp-label">IDLE</div>
+          <div class="state-sub" id="resp-sub">Waiting for respiration tracking…</div>
+        </div>
+        <div class="signals">
+          <div class="sig"><div class="k">dZ/dt</div><div class="v" id="sig-dz">—</div><div class="u">mm/s</div></div>
+          <div class="sig"><div class="k">d²Z/dt²</div><div class="v" id="sig-d2z">—</div><div class="u">mm/s²</div></div>
+          <div class="sig"><div class="k">Stable</div><div class="v" id="sig-stable">—</div><div class="u">ms</div></div>
+        </div>
+        <div class="gating-row" id="gating-row"></div>
+        <div class="reason" id="resp-reason"></div>
+      </div>
+
+      <div class="card" style="flex:0 0 auto;">
+        <h2>Depth Measurement</h2>
+        <div class="depth">
+          <div class="sig"><div class="k">Median</div><div class="v" id="d-median">—</div><div class="u">mm</div></div>
+          <div class="sig"><div class="k">Mean</div><div class="v" id="d-mean">—</div><div class="u">mm</div></div>
+          <div class="sig"><div class="k">Thickness</div><div class="v" id="d-thick">—</div><div class="u">mm</div></div>
+          <div class="sig"><div class="k">Valid px</div><div class="v" id="d-valid">—</div><div class="u">ratio</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: exposure recommendation -->
+    <div class="col">
+      <div class="card" id="expCard" style="flex:1 1 auto;">
+        <h2>Exposure Recommendation</h2>
+        <div class="ref-notice">REFERENCE ONLY — operator confirmation required. The system never fires the X-ray.</div>
+
+        <div id="expNumbers">
+          <div class="exp-values">
+            <div class="exp-val"><div class="k">kVp</div><div class="v" id="exp-kvp">—</div></div>
+            <div class="exp-val"><div class="k">mAs</div><div class="v" id="exp-mas">—</div></div>
+          </div>
+          <div class="exp-input" id="exp-input">No recommendation yet.</div>
+          <div class="guard-row" id="exp-guards"></div>
+          <div class="exp-source" id="exp-source"></div>
+        </div>
+
+        <div id="manualReviewBox"></div>
+
+        <button id="btnApprove" disabled>Approve Recommendation</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MANUAL MODE OVERLAY ============ -->
+<div id="manualOverlay">
+  <div class="mtitle">MANUAL MODE</div>
+  <div class="mmsg">Automatic recommendations are disabled.<br/>Use the X-ray machine's manual workflow.</div>
+  <div class="mcode" id="ov-code"></div>
+  <div class="maction" id="ov-action"></div>
+  <div class="ovbtns">
+    <button class="danger" id="ov-abort">Abort</button>
+    <button class="secondary" id="ov-dismiss">Acknowledge</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+(function () {
+  // ---------------------------------------------------------------------------
+  // Helpers (all defensive — never throw on bad/missing data)
+  // ---------------------------------------------------------------------------
+  var $ = function (id) { return document.getElementById(id); };
+  function get(obj, path, dflt) {
+    try {
+      var cur = obj;
+      var parts = path.split(".");
+      for (var i = 0; i < parts.length; i++) {
+        if (cur == null) return dflt;
+        cur = cur[parts[i]];
+      }
+      return (cur === undefined || cur === null) ? dflt : cur;
+    } catch (e) { return dflt; }
+  }
+  function num(v, digits) {
+    if (v === null || v === undefined || v === "" || isNaN(Number(v))) return "—";
+    var n = Number(v);
+    return (digits === undefined) ? String(n) : n.toFixed(digits);
+  }
+  function setText(id, txt) { var el = $(id); if (el) el.textContent = (txt === undefined || txt === null) ? "—" : txt; }
+  function fmtUptime(s) {
+    s = Math.max(0, Math.floor(Number(s) || 0));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    function p(n) { return (n < 10 ? "0" : "") + n; }
+    return (h > 0 ? h + "h " : "") + p(m) + "m " + p(sec) + "s";
+  }
+
+  var toastTimer = null;
+  function toast(msg, kind) {
+    var t = $("toast");
+    if (!t) return;
+    t.textContent = msg;
+    t.className = "toast show" + (kind ? " " + kind : "");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.className = "toast"; }, 3200);
+  }
+
+  // ---------------------------------------------------------------------------
+  // App state
+  // ---------------------------------------------------------------------------
+  var state = {
+    sessionId: null,
+    deviceId: null,
+    lastRecommendationId: null,
+    approvable: false,
+    manualOverlayShown: false,
+  };
+
+  // ---------------------------------------------------------------------------
+  // REST helpers (relative URLs => same origin as the gateway)
+  // ---------------------------------------------------------------------------
+  function apiGet(path) {
+    return fetch(path, { method: "GET", cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+  }
+  function apiPost(path, body) {
+    return fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) throw new Error(get(j, "detail", "HTTP " + r.status));
+        return j;
+      });
+    });
+  }
+  function operatorId() {
+    var el = $("operatorId");
+    var v = el && el.value ? el.value.trim() : "";
+    return v || "operator_1";
+  }
+
+  // ---------------------------------------------------------------------------
+  // Renderers
+  // ---------------------------------------------------------------------------
+  var RESP_LABELS = {
+    idle: "IDLE", tracking: "TRACKING", cue_requested: "BREATH CUE",
+    stable_breath_hold: "READY", unstable: "UNSTABLE", abort: "ABORT",
+    timeout: "TIMEOUT", manual_mode: "MANUAL MODE",
+  };
+  var RESP_SUBS = {
+    idle: "Waiting for respiration tracking…",
+    tracking: "Tracking respiration — hold position.",
+    cue_requested: "Breath-hold cue issued — coach the patient.",
+    stable_breath_hold: "Stable breath-hold detected — confirm and capture.",
+    unstable: "Breathing unstable — do not capture.",
+    abort: "Aborted — capture not permitted.",
+    timeout: "Breath-hold window timed out.",
+    manual_mode: "Manual mode active — recommendations disabled.",
+  };
+  function respColorClass(s) {
+    if (s === "stable_breath_hold") return "green";
+    if (s === "tracking" || s === "cue_requested") return "amber";
+    if (s === "manual_mode") return "blue";
+    if (s === "abort" || s === "unstable" || s === "timeout") return "red";
+    return ""; // idle / unknown
+  }
+
+  function renderRespiration(msg) {
+    var s = get(msg, "state", "idle");
+    var label = RESP_LABELS[s] || String(s).toUpperCase();
+    var sub = RESP_SUBS[s] || ("State: " + s);
+    setText("resp-label", label);
+    setText("resp-sub", sub);
+
+    var banner = $("respBanner");
+    if (banner) banner.className = respColorClass(s);
+
+    setText("sig-dz", num(get(msg, "signal.dz_dt_mm_s", null), 2));
+    setText("sig-d2z", num(get(msg, "signal.d2z_dt2_mm_s2", null), 2));
+    var stable = get(msg, "signal.stable_duration_ms", null);
+    setText("sig-stable", stable === null ? "—" : Math.round(Number(stable)));
+
+    // gating pills
+    var gr = $("gating-row");
+    if (gr) {
+      gr.innerHTML = "";
+      var g = get(msg, "gating", {});
+      function pill(text, good) {
+        var p = document.createElement("span");
+        p.className = "pill " + (good ? "good" : "bad");
+        p.textContent = text;
+        gr.appendChild(p);
+      }
+      pill(g.window_open ? "Window OPEN" : "Window closed", !!g.window_open);
+      pill(g.ready_to_capture ? "READY to capture" : "Not ready", !!g.ready_to_capture);
+      if (g.abort) pill("ABORT", false);
+    }
+    var reason = get(msg, "gating.reason", "");
+    var conf = get(msg, "quality.confidence", null);
+    var reasonStr = reason ? ("Reason: " + reason) : "";
+    if (conf !== null && !isNaN(Number(conf))) {
+      reasonStr += (reasonStr ? "  •  " : "") + "Confidence: " + Number(conf).toFixed(2);
+    }
+    setText("resp-reason", reasonStr);
+
+    // manual_mode triggers the safety overlay too
+    if (s === "manual_mode") {
+      showManualOverlay({ code: "RESP_MANUAL", message: "Respiration pipeline switched to manual mode.", action: "Use the X-ray machine's manual workflow." });
+    }
+  }
+
+  function renderDepth(msg) {
+    setText("d-median", num(get(msg, "measurement.median_depth_mm", null), 1));
+    setText("d-mean", num(get(msg, "measurement.mean_depth_mm", null), 1));
+    setText("d-thick", num(get(msg, "measurement.estimated_thickness_mm", null), 1));
+    setText("d-valid", num(get(msg, "measurement.valid_pixel_ratio", null), 3));
+  }
+
+  function renderExposure(msg) {
+    var manualReview = !!get(msg, "guardrails.manual_review_required", false);
+    var recId = get(msg, "recommendation_id", null);
+    state.lastRecommendationId = recId;
+
+    var numbers = $("expNumbers");
+    var box = $("manualReviewBox");
+
+    if (manualReview) {
+      // NO kVp/mAs numbers — only the manual-review message
+      if (numbers) numbers.style.display = "none";
+      if (box) {
+        box.style.display = "block";
+        box.textContent = get(msg, "display.message",
+          "Manual review required — no automatic suggestion for this mode.");
+      }
+      state.approvable = false;
+    } else {
+      if (numbers) numbers.style.display = "block";
+      if (box) box.style.display = "none";
+
+      var kvp = get(msg, "recommendation.kvp", null);
+      var mas = get(msg, "recommendation.mas", null);
+      // Belt-and-suspenders: if numbers are null even without the flag, hide them.
+      if (kvp === null || mas === null) {
+        if (numbers) numbers.style.display = "none";
+        if (box) {
+          box.style.display = "block";
+          box.textContent = get(msg, "display.message", "No automatic suggestion available — proceed manually.");
+        }
+        state.approvable = false;
+      } else {
+        setText("exp-kvp", num(kvp, 0));
+        setText("exp-mas", num(mas, (Number(mas) % 1 === 0) ? 0 : 1));
+
+        var region = get(msg, "input.body_region", "—");
+        var pmode = get(msg, "input.patient_mode", "—");
+        var thick = get(msg, "input.estimated_thickness_mm", null);
+        var iconf = get(msg, "input.confidence", null);
+        var inEl = $("exp-input");
+        if (inEl) {
+          inEl.innerHTML =
+            "Region <b>" + region + "</b> &nbsp;•&nbsp; Mode <b>" + pmode + "</b><br/>" +
+            "Thickness <b>" + num(thick, 1) + " mm</b>" +
+            (iconf !== null ? " &nbsp;•&nbsp; Input conf <b>" + num(iconf, 2) + "</b>" : "");
+        }
+
+        // guardrail pills
+        var gw = $("exp-guards");
+        if (gw) {
+          gw.innerHTML = "";
+          var gd = get(msg, "guardrails", {});
+          function gp(text, good) {
+            var p = document.createElement("span");
+            p.className = "pill " + (good ? "good" : "bad");
+            p.textContent = text;
+            gw.appendChild(p);
+          }
+          gp(gd.within_min_max ? "Within safe range" : "Clamped to range", !!gd.within_min_max);
+          if (gd.pediatric_limit_applied) gp("Pediatric limit", true);
+          if (gd.bariatric_offset_applied) gp("Bariatric offset", true);
+        }
+
+        var src = get(msg, "recommendation.source", "—");
+        var hash = get(msg, "recommendation.model_hash", "—");
+        var rconf = get(msg, "recommendation.confidence", null);
+        var sev = get(msg, "display.severity", "");
+        var dmsg = get(msg, "display.message", "");
+        setText("exp-source",
+          "source: " + src + "  •  conf: " + num(rconf, 2) +
+          (recId ? "  •  rec: " + recId : "") +
+          "  •  " + hash +
+          (dmsg ? ("\n" + dmsg) : ""));
+
+        state.approvable = !!recId && !!state.sessionId;
+      }
+    }
+
+    var btn = $("btnApprove");
+    if (btn) btn.disabled = !state.approvable;
+  }
+
+  function renderSystemError(msg) {
+    var safe = !!get(msg, "safe_state_entered", false);
+    var code = get(msg, "code", "UNKNOWN");
+    var sev = get(msg, "severity", "error");
+    var text = get(msg, "message", "System error.");
+    var action = get(msg, "recommended_operator_action", "Use the X-ray machine's manual workflow.");
+
+    if (safe) {
+      showManualOverlay({ code: code + " (" + sev + ")", message: text, action: action });
+    } else {
+      toast("Error " + code + ": " + text, "err");
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Manual mode overlay (key safety UX)
+  // ---------------------------------------------------------------------------
+  function showManualOverlay(info) {
+    var ov = $("manualOverlay");
+    if (!ov) return;
+    setText("ov-code", "Code: " + get(info, "code", "—") + "  •  " + get(info, "message", ""));
+    setText("ov-action", "Recommended action: " + get(info, "action", "Use the manual workflow."));
+    ov.classList.add("show");
+    state.manualOverlayShown = true;
+    // recommendations are disabled while in manual mode
+    var btn = $("btnApprove");
+    if (btn) btn.disabled = true;
+  }
+  function hideManualOverlay() {
+    var ov = $("manualOverlay");
+    if (ov) ov.classList.remove("show");
+    state.manualOverlayShown = false;
+  }
+
+  // ---------------------------------------------------------------------------
+  // WebSocket message dispatch (never throws)
+  // ---------------------------------------------------------------------------
+  function handleMessage(raw) {
+    var msg;
+    try { msg = JSON.parse(raw); } catch (e) { return; }
+    if (!msg || typeof msg !== "object") return;
+    try {
+      var t = msg.type;
+      if (get(msg, "session_id", null)) state.sessionId = msg.session_id;
+      if (get(msg, "device_id", null)) state.deviceId = msg.device_id;
+
+      switch (t) {
+        case "respiration.state": renderRespiration(msg); break;
+        case "depth.summary": renderDepth(msg); break;
+        case "exposure.recommendation": renderExposure(msg); break;
+        case "system.error": renderSystemError(msg); break;
+        default: break; // unknown topic — ignore safely
+      }
+    } catch (e) {
+      // Robustness: never let one bad message break the console.
+      // eslint-disable-next-line no-console
+      if (window.console) console.warn("message handler error", e);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // WebSocket with exponential backoff reconnect
+  // ---------------------------------------------------------------------------
+  var ws = null;
+  var backoff = 500;          // ms, doubles up to cap
+  var BACKOFF_CAP = 10000;    // ~10s cap
+  var reconnectTimer = null;
+  var pingTimer = null;
+
+  function wsUrl() {
+    var proto = (location.protocol === "https:") ? "wss:" : "ws:";
+    var host = location.host || "localhost:8000";
+    return proto + "//" + host + "/ws/v1/events";
+  }
+
+  function setConn(connected) {
+    var c = $("conn");
+    if (!c) return;
+    if (connected) {
+      c.className = "conn ok";
+      setText("conn-text", "Connected");
+    } else {
+      c.className = "conn bad";
+      var nextS = Math.round(backoff / 1000 * 10) / 10;
+      setText("conn-text", "Reconnecting… (" + nextS + "s)");
+    }
+  }
+
+  function scheduleReconnect() {
+    setConn(false);
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connectWs, backoff);
+    backoff = Math.min(backoff * 2, BACKOFF_CAP);
+  }
+
+  function connectWs() {
+    try { if (ws) { ws.onopen = ws.onclose = ws.onerror = ws.onmessage = null; ws.close(); } } catch (e) {}
+    try {
+      ws = new WebSocket(wsUrl());
+    } catch (e) {
+      scheduleReconnect();
+      return;
+    }
+    ws.onopen = function () {
+      backoff = 500;            // reset on successful open
+      setConn(true);
+      // keepalive: server does a blocking receive_text(); send periodic pings
+      if (pingTimer) clearInterval(pingTimer);
+      pingTimer = setInterval(function () {
+        try { if (ws && ws.readyState === 1) ws.send("ping"); } catch (e) {}
+      }, 15000);
+    };
+    ws.onmessage = function (ev) { handleMessage(ev.data); };
+    ws.onerror = function () { /* close handler will reconnect */ };
+    ws.onclose = function () {
+      if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
+      scheduleReconnect();
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // REST polling fallback (state every ~2s, health for uptime)
+  // ---------------------------------------------------------------------------
+  function pollState() {
+    apiGet("/api/v1/state").then(function (s) {
+      if (get(s, "session_id", null)) {
+        state.sessionId = s.session_id;
+        setText("m-session", s.session_id);
+      }
+      setText("m-mode", get(s, "mode", "—"));
+
+      var cam = get(s, "camera", "—");
+      var camEl = $("m-camera");
+      if (camEl) {
+        camEl.textContent = cam;
+        camEl.className = "pill " + (cam === "connected" ? "good" : "bad");
+      }
+      var cal = get(s, "calibration", "—");
+      var calEl = $("m-calib");
+      if (calEl) {
+        calEl.textContent = cal;
+        calEl.className = "pill " + (cal === "valid" ? "good" : "bad");
+      }
+
+      // safe_state from REST is an independent fallback path for the overlay
+      if (get(s, "safe_state", false) === true) {
+        if (!state.manualOverlayShown) {
+          showManualOverlay({ code: "SAFE_STATE", message: "Device is in safe state.", action: "Use the X-ray machine's manual workflow." });
+        }
+      }
+      var rs = get(s, "respiration_state", null);
+      if (rs === "manual_mode" && !state.manualOverlayShown) {
+        showManualOverlay({ code: "RESP_MANUAL", message: "Respiration pipeline in manual mode.", action: "Use the manual workflow." });
+      }
+    }).catch(function () { /* gateway unreachable — WS indicator already shows it */ });
+  }
+
+  function pollHealth() {
+    apiGet("/api/v1/health").then(function (h) {
+      setText("m-device", get(h, "device_id", "—"));
+      if (get(h, "device_id", null)) state.deviceId = h.device_id;
+      setText("m-uptime", fmtUptime(get(h, "uptime_s", 0)));
+    }).catch(function () { /* ignore */ });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Operator actions
+  // ---------------------------------------------------------------------------
+  function startSession() {
+    var body = {
+      body_region: get($("bodyRegion"), "value", "chest_pa"),
+      patient_mode: get($("patientMode"), "value", "adult"),
+    };
+    apiPost("/api/v1/sessions", body).then(function (r) {
+      if (get(r, "session_id", null)) {
+        state.sessionId = r.session_id;
+        setText("m-session", r.session_id);
+      }
+      toast("Session started (" + get(r, "status", "ok") + ")", "ok");
+    }).catch(function (e) { toast("Start failed: " + e.message, "err"); });
+  }
+
+  function approveRecommendation() {
+    if (!state.sessionId) { toast("No active session", "err"); return; }
+    if (!state.lastRecommendationId) { toast("No recommendation to approve", "err"); return; }
+    apiPost("/api/v1/operator/approve", {
+      session_id: state.sessionId,
+      recommendation_id: state.lastRecommendationId,
+      operator_id: operatorId(),
+    }).then(function (r) {
+      toast("Approved — audit " + get(r, "audit_id", "?"), "ok");
+    }).catch(function (e) { toast("Approve failed: " + e.message, "err"); });
+  }
+
+  function sendAction(action, payload) {
+    if (!state.sessionId) { toast("No active session", "err"); return; }
+    apiPost("/api/v1/operator/action", {
+      session_id: state.sessionId,
+      operator_id: operatorId(),
+      action: action,
+      payload: payload || {},
+    }).then(function (r) {
+      toast(action + " — " + get(r, "status", "ok"), "ok");
+    }).catch(function (e) { toast(action + " failed: " + e.message, "err"); });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Wire up
+  // ---------------------------------------------------------------------------
+  function init() {
+    $("btnStart").addEventListener("click", startSession);
+    $("btnCue").addEventListener("click", function () { sendAction("play_breath_cue", {}); });
+    $("btnApprove").addEventListener("click", approveRecommendation);
+    $("btnManual").addEventListener("click", function () { sendAction("switch_manual_mode", {}); });
+    $("btnAbort").addEventListener("click", function () { sendAction("abort", {}); });
+    $("ov-abort").addEventListener("click", function () { sendAction("abort", {}); });
+    $("ov-dismiss").addEventListener("click", hideManualOverlay);
+
+    connectWs();
+    pollState();
+    pollHealth();
+    setInterval(pollState, 2000);
+    setInterval(pollHealth, 2000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

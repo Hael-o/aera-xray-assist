@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DepthSummary",
+  "type": "object",
+  "required": ["schema_version", "type", "device_id", "session_id", "frame_id", "timestamp_ms", "measurement"],
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "type": { "const": "depth.summary" },
+    "device_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "frame_id": { "type": "integer" },
+    "timestamp_ms": { "type": "integer" },
+    "monotonic_ms": { "type": "integer" },
+    "roi": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "x": { "type": "integer" }, "y": { "type": "integer" },
+        "width": { "type": "integer" }, "height": { "type": "integer" },
+        "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "required": ["median_depth_mm", "estimated_thickness_mm", "valid_pixel_ratio"],
+      "properties": {
+        "median_depth_mm": { "type": "number" },
+        "mean_depth_mm": { "type": "number" },
+        "std_depth_mm": { "type": "number" },
+        "valid_pixel_ratio": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "estimated_thickness_mm": { "type": "number" }
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "properties": {
+        "profile_id": { "type": "string" },
+        "bed_origin_mm": { "type": "number" },
+        "extrinsic_version": { "type": "string" }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "ir_saturation": { "type": "boolean" },
+        "motion_artifact": { "type": "boolean" },
+        "clothing_artifact_score": { "type": "number" },
+        "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Runtime data (never commit DB / logs / captured frames)
+smart-xray-assist/var/
+**/var/*.db
+**/var/*.db-wal
+**/var/*.db-shm
+**/var/log/
+
+# Editor / tooling
+.idea/
+.vscode/
+*.swp
+
+# Claude Code tooling
+.claude/
