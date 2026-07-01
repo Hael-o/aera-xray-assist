@@ -36,6 +36,24 @@ kVp ∈ [60, 120]      mAs ∈ [1.0, 80.0]
 
 클램프가 일어나면 추천에 `within_min_max=false`가 실려 콘솔에 "클램프됨" 배지가 뜹니다.
 
+### 권고 결정 플로우
+
+```mermaid
+flowchart TD
+  A["stable_breath_hold → 추정 두께"] --> B{"두께·부위·모드에<br/>맞는 LUT 행?"}
+  B -- "없음 / 검토 대기" --> M["manual_review_required = true<br/>(kVp/mAs 미표시)"]
+  B -- 있음 --> C["LUT의 kVp/mAs"]
+  C --> D{"가드레일 내?<br/>kVp 60–120 · mAs 1–80"}
+  D -- 아니오 --> E["클램프 → within_min_max = false"]
+  D -- 예 --> F["within_min_max = true"]
+  E --> G["권고 (참고 전용)"]
+  F --> G
+  M --> H{"작업자 승인?"}
+  G --> H
+  H -- 아니오 --> X["적용 안 함"]
+  H -- 예 --> Y["감사 기록 → 장비 수동<br/>워크플로에서 작업자가 적용"]
+```
+
 ---
 
 ## 안전 모델

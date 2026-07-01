@@ -64,6 +64,37 @@ Services communicate **only through the event bus**, so splitting the pipeline a
 
 ---
 
+## Operational flow
+
+End-to-end operator journey, with the gating decisions and the safety branch that overrides every state:
+
+```mermaid
+flowchart TD
+  A(["Open study from worklist"]) --> B{"Device connected?"}
+  B -- no --> B1["Settings → connect camera<br/>(vendor · serial)"] --> B
+  B -- yes --> C{"Calibrated?"}
+  C -- no --> C1["Empty-bed calibration<br/>(GTS-002)"] --> C
+  C -- yes --> D["Start session"]
+  D --> E["Tracking respiration<br/>dZ/dt · d²Z/dt²"]
+  E --> F["Breath-hold cue"]
+  F --> G{"Stable ≥1000ms?<br/>|dZ/dt|<2 · var<0.03 · px>0.85"}
+  G -- "cough / jerk (d²Z/dt²>25)" --> H["Abort"] --> E
+  G -- "timeout 10s" --> T["Timeout"] --> E
+  G -- yes --> I["ready_to_capture"]
+  I --> J{"LUT row pending review?"}
+  J -- yes --> K["Manual review required<br/>(no kVp/mAs)"] --> E
+  J -- no --> L["kVp/mAs → guardrail clamp<br/>kVp 60–120 · mAs 1–80"]
+  L --> M{"Operator approves?"}
+  M -- no --> E
+  M -- yes --> N["Audit record → operator applies it in the<br/>X-ray machine's own manual workflow"]
+  E -. "any fault" .-> S[["Safe state / Manual mode<br/>recommendations disabled"]]
+  S -. "good frame" .-> E
+```
+
+The system **stops at the audit record** — it never fires the X-ray. See [Depth & gating](docs/depth-and-gating.md) and [Exposure & safety](docs/exposure-and-safety.md).
+
+---
+
 ## Quick start
 
 ```bash

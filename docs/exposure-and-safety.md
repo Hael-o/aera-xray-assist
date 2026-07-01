@@ -36,6 +36,24 @@ kVp ∈ [60, 120]      mAs ∈ [1.0, 80.0]
 
 A clamp sets `within_min_max=false` on the recommendation, and the console shows a "Clamped" badge. This is risk control **RC-EXP-001** (recommendations must not exceed LUT bounds); **RC-EXP-002** requires confidence + LUT version on every recommendation.
 
+### Recommendation decision flow
+
+```mermaid
+flowchart TD
+  A["stable_breath_hold → estimated thickness"] --> B{"LUT row for<br/>thickness · region · mode?"}
+  B -- "none / pending review" --> M["manual_review_required = true<br/>(no kVp/mAs shown)"]
+  B -- found --> C["kVp/mAs from LUT"]
+  C --> D{"within guardrails?<br/>kVp 60–120 · mAs 1–80"}
+  D -- no --> E["clamp → within_min_max = false"]
+  D -- yes --> F["within_min_max = true"]
+  E --> G["recommendation (reference-only)"]
+  F --> G
+  M --> H{"operator approves?"}
+  G --> H
+  H -- no --> X["not applied"]
+  H -- yes --> Y["audit record → operator applies<br/>in the machine's manual workflow"]
+```
+
 ---
 
 ## Safety model
